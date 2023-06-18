@@ -6,3 +6,6 @@
     update: yes
     accept_hostkey: yes
     version: master
+
+- name: Stow dotfiles
+  ansible.builtin.shell: cd $HOME/.dotfiles && ./setup
