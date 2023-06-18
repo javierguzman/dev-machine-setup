@@ -8,4 +8,4 @@
     version: master
 
 - name: Stow dotfiles
-  ansible.builtin.shell: cd $HOME/.dotfiles && ./setup
+  ansible.builtin.shell: cd $HOME/.dotfiles && ./setup.sh
