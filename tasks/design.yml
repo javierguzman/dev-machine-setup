@@ -14,3 +14,8 @@
     name:
       - affinity-photo
       - affinity-designer
+
+- name: Install gimp
+  community.general.homebrew:
+    name: gimp
+    state: present
