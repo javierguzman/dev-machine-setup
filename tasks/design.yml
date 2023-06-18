@@ -1,0 +1,16 @@
+- name: Install Darktable & Drawio
+  community.general.homebrew:
+    name:
+      - darktable
+      - drawio
+
+- name: Install Figma
+  community.general.homebrew:
+    name:
+      - figma
+
+- name: Install Affinity
+  community.general.homebrew:
+    name:
+      - affinity-photo
+      - affinity-designer

@@ -1,0 +1,12 @@
+- name: Install Obsidian
+  community.general.homebrew:
+    name: obsidian
+    state: present
+- name: Install Firefox
+  community.general.homebrew:
+    name: firefox
+    state: present
+- name: Install Thunderbird
+  community.general.homebrew:
+    name: thunderbird
+    state: present

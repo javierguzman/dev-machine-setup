@@ -1,0 +1,23 @@
+- name: Github setup name
+  git_config:
+    name: user.name
+    scope: global
+    value: "Javier Guzman"
+  tags:
+    - git-github
+
+- name: Github setup email
+  git_config:
+    name: user.email
+    scope: global
+    value: "906599+javierguzman@users.noreply.github.com"
+  tags:
+    - git-github
+
+- name: Github setup initial branch
+  git_config:
+    name: init.defaultbranch
+    scope: global
+    value: "main"
+  tags:
+    - git-github

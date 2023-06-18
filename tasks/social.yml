@@ -1,0 +1,14 @@
+- name: Install Discord
+  community.general.homebrew:
+    name: discord
+    state: present
+
+- name: Install Whatsapp
+  community.general.homebrew:
+    name: whatsapp
+    state: present
+
+- name: Install Signal
+  community.general.homebrew:
+    name: signal
+    state: present

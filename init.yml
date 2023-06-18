@@ -1,0 +1,32 @@
+- hosts: localhost
+  gather_facts: true
+  pre_tasks:
+    - name: Ensuring Homebrew is installed
+      become: true
+      stat:
+        path: /usr/local/bin/brew
+      register: homebrew_check
+
+    - name: Install homebrew if not installed
+      become: false
+      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      delay: 3
+      when: homebrew_check.stat.exists == false
+
+  tags:
+    - install
+    - core
+
+  tasks:
+    - import_tasks: tasks/git-setup.yml
+    - import_tasks: tasks/core-setup.yml
+    - import_tasks: tasks/brew.yml
+    - import_tasks: tasks/zsh.yml
+    - import_tasks: tasks/prodev.yml
+    - import_tasks: tasks/node.yml
+    - import_tasks: tasks/python.yml
+    - import_tasks: tasks/office.yml
+    - import_tasks: tasks/social.yml
+    - import_tasks: tasks/design.yml
+    - import_tasks: tasks/dev-tools.yml
+    - import_tasks: tasks/multimedia.yml

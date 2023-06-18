@@ -1,0 +1,4 @@
+- name: Updating Homebrew
+  homebrew:
+    update_homebrew: true
+  when: homebrew_check.stat.exists

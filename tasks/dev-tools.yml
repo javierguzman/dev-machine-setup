@@ -1,0 +1,6 @@
+- name: Install VSCode, iterm2, Chrome and Insomnia
+  community.general.homebrew:
+    name:
+      - visual-studio-code
+      - insomnia
+      - google-chrome

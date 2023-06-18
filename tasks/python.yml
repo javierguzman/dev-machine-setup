@@ -1,0 +1,17 @@
+- name: Install Pyenv using Homebrew
+  community.general.homebrew:
+    name: pyenv
+    state: present
+
+- name: Add Pyenv initialization to shell profile (Zsh)
+  lineinfile:
+    path: "{{ ansible_user_dir }}/.zshrc"
+    line: 'eval "$(pyenv init --path)"'
+    create: yes
+    insertafter: EOF
+
+- name: Install Python 3.11 using Pyenv
+  shell: |
+    pyenv install 3.11
+    pyenv global 3.11
+    pyenv rehash
