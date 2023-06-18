@@ -12,3 +12,8 @@
   community.general.homebrew:
     name: koekeishiya/formulae/yabai
     state: present
+
+- name: Install iterm2
+  community.general.homebrew:
+    name: iterm2
+    state: present
