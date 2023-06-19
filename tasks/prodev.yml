@@ -17,3 +17,7 @@
   community.general.homebrew:
     name: iterm2
     state: present
+- name: Install skhd
+  community.general.homebrew:
+    name: skhd
+    status: present
