@@ -1,14 +1,8 @@
-- name: Install Discord
+- name: Install social apps
   community.general.homebrew:
-    name: discord
+    name:
+      - discord
+      - whatsapp
+      - signal
     state: present
-
-- name: Install Whatsapp
-  community.general.homebrew:
-    name: whatsapp
-    state: present
-
-- name: Install Signal
-  community.general.homebrew:
-    name: signal
-    state: present
+  when: ansible_os_family == "Darwin"

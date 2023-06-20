@@ -1,23 +1,10 @@
-- name: Install Neovim
+- name: Install Developer Pro Tools
   community.general.homebrew:
-    name: neovim
+    name:
+      - neovim
+      - tmux
+      - koekeishiya/formulae/yabai
+      - iterm2
+      - skhd
     state: present
-
-- name: Install Tmux
-  community.general.homebrew:
-    name: tmux
-    state: present
-
-- name: Install Yabai
-  community.general.homebrew:
-    name: koekeishiya/formulae/yabai
-    state: present
-
-- name: Install iterm2
-  community.general.homebrew:
-    name: iterm2
-    state: present
-- name: Install skhd
-  community.general.homebrew:
-    name: skhd
-    status: present
+    when: ansible_os_family == "Darwin"

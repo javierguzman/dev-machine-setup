@@ -6,12 +6,18 @@
       stat:
         path: /usr/local/bin/brew
       register: homebrew_check
+      when: ansible_os_family == "Darwin"
 
     - name: Install homebrew if not installed
       become: false
       shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
       delay: 3
-      when: homebrew_check.stat.exists == false
+      when: homebrew_check.stat.exists == false and ansible_os_family == "Darwin"
+
+    - name: Updating Homebrew
+      homebrew:
+        update_homebrew: true
+      when: homebrew_check.stat.exists
 
   tags:
     - install
@@ -20,7 +26,6 @@
   tasks:
     - import_tasks: tasks/git-setup.yml
     - import_tasks: tasks/core-setup.yml
-    - import_tasks: tasks/brew.yml
     - import_tasks: tasks/zsh.yml
     - import_tasks: tasks/prodev.yml
     - import_tasks: tasks/node.yml

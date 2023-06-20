@@ -3,3 +3,5 @@
     name:
       - spotify
       - vlc
+    state: present
+  when: ansible_os_family == "Darwin"

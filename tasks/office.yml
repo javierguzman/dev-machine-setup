@@ -1,12 +1,8 @@
-- name: Install Obsidian
+- name: Install office tools
   community.general.homebrew:
-    name: obsidian
+    name:
+      - obsidian
+      - firefox
+      - thunderbird
     state: present
-- name: Install Firefox
-  community.general.homebrew:
-    name: firefox
-    state: present
-- name: Install Thunderbird
-  community.general.homebrew:
-    name: thunderbird
-    state: present
+  when: ansible_os_family == "Darwin"

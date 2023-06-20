@@ -1,29 +1,10 @@
-- name: Install ripgrep
+- name: Install core tools
   community.general.homebrew:
-    name: ripgrep
-    state: present
-
-- name: Install ffmpeg
-  community.general.homebrew:
-    name: ffmpeg
-    state: present
-
-- name: Install yt-dlp
-  community.general.homebrew:
-    name: yt-dlp
-    state: present
-
-- name: Install stow
-  community.general.homebrew:
-    name: stow
-    state: present
-
-- name: Install fzf
-  community.general.homebrew:
-    name: fzf
-    state: present
-
-- name: Install TLDR
-  community.general.homebrew:
-    name: tldr
+    name:
+      - ripgrep
+      - ffmpeg
+      - yt-dlp
+      - stow
+      - fzf
+      - tldr
     state: present

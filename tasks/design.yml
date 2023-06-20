@@ -1,21 +1,11 @@
-- name: Install Darktable & Drawio
+- name: Install Design tools
   community.general.homebrew:
     name:
       - darktable
       - drawio
-
-- name: Install Figma
-  community.general.homebrew:
-    name:
       - figma
-
-- name: Install Affinity
-  community.general.homebrew:
-    name:
+      - gimp
       - affinity-photo
       - affinity-designer
-
-- name: Install gimp
-  community.general.homebrew:
-    name: gimp
     state: present
+  when: ansible_os_family == "Darwin"

@@ -2,6 +2,7 @@
   community.general.homebrew:
     name: pyenv
     state: present
+  when: ansible_os_family == "Darwin"
 
 - name: Add Pyenv initialization to shell profile (Zsh)
   lineinfile:
@@ -9,9 +10,11 @@
     line: 'eval "$(pyenv init --path)"'
     create: yes
     insertafter: EOF
+  when: ansible_os_family == "Darwin"
 
 - name: Install Python 3.11 using Pyenv
   shell: |
     pyenv install 3.11
     pyenv global 3.11
     pyenv rehash
+  when: ansible_os_family == "Darwin"

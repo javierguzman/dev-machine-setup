@@ -2,31 +2,33 @@
   community.general.homebrew:
     name: zsh
     state: present
+  when: ansible_os_family == "Darwin"
+
 
 - name: Set default shell to zsh
   ansible.builtin.command: chsh -s /opt/homebrew/bin/zsh {{ ansible_env.USER }}
   become: true
   changed_when: false
+  when: ansible_os_family == "Darwin"
+
 
 - name: Clone Oh-My-Zsh repository
   git:
     repo: https://github.com/ohmyzsh/ohmyzsh.git
     dest: "{{ ansible_user_dir }}/.oh-my-zsh"
     version: master
+    when: ansible_os_family == "Darwin"
 
 - name: Install Powerlevel10k theme
   git:
     repo: https://github.com/romkatv/powerlevel10k.git
     dest: "{{ ansible_user_dir }}/.oh-my-zsh/custom/themes/powerlevel10k"
     version: master
+    when: ansible_os_family == "Darwin"
 
 - name: Clone Zsh-autosuggestions repository
   git:
     repo: https://github.com/zsh-users/zsh-autosuggestions.git
     dest: "{{ ansible_user_dir }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
     version: master
-# - name: Update Oh-My-Zsh plugins list
-# lineinfile:
-# path: "{{ ansible_user_dir }}/.zshrc"
-# line: "plugins=(git zsh-autosuggestions)"
-# insertafter: "plugins=(git)"
+  when: ansible_os_family == "Darwin"

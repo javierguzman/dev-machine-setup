@@ -6,6 +6,8 @@
     update: yes
     accept_hostkey: yes
     version: master
+  when: ansible_os_family == "Darwin"
 
 - name: Stow dotfiles
   ansible.builtin.shell: cd $HOME/.dotfiles && ./setup.sh
+  when: ansible_os_family == "Darwin"

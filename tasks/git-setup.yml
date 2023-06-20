@@ -4,7 +4,7 @@
     scope: global
     value: "Javier Guzman"
   tags:
-    - git-github
+    - git
 
 - name: Github setup email
   git_config:
@@ -12,7 +12,7 @@
     scope: global
     value: "906599+javierguzman@users.noreply.github.com"
   tags:
-    - git-github
+    - git
 
 - name: Github setup initial branch
   git_config:
@@ -20,4 +20,4 @@
     scope: global
     value: "main"
   tags:
-    - git-github
+    - git
