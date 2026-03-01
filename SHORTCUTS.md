@@ -73,24 +73,36 @@
 | `Space + lg` | Open LazyGit |
 | `Space + k` | Toggle kubectl panel |
 
-### AI Assistant (avante.nvim — Claude Sonnet)
+### AI Assistant (codecompanion.nvim — Claude Sonnet)
 
 | Shortcut | Action |
 |----------|--------|
-| `Space + aa` | Open / toggle AI chat sidebar |
-| `Space + ae` | Ask Claude to edit the selected code (visual mode) |
-| `Space + ar` | Refresh / reset the chat |
+| `Space + aa` | Open / toggle AI chat buffer |
+| `Space + ap` | Open action palette — all available AI actions |
+| `Space + ae` | Inline AI edit — type a prompt, Claude edits in place |
+| `Space + ac` | Add visual selection to the open chat (visual mode) |
+
+**Inside the chat buffer:**
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+s` (insert) / `Enter` (normal) | Send message |
+| `#buffer` | Reference current buffer as context |
+| `#file` | Reference a specific file |
+| `q` | Close chat |
 
 > **Workflow — chat about your code:**
-> 1. `Space+aa` to open the sidebar
-> 2. Type your question — Claude can already see the current file
-> 3. Mention other files with `@filename` to attach them as context
-> 4. Claude suggests changes as a diff — accept or reject inline
+> 1. `Space+aa` to open the chat
+> 2. Ask anything — reference your current buffer with `#buffer`
+> 3. Attach other files with `#file:path/to/file`
+> 4. Claude replies inline; apply suggestions manually or ask it to edit
 
 > **Workflow — edit a specific block:**
 > 1. Select lines in visual mode (`v` or `V`)
 > 2. `Space+ae` — type your instruction (e.g. "refactor this to use async/await")
-> 3. Review the diff and accept or reject
+> 3. Claude edits the selection in place
+>
+> Or: select lines → `Space+ac` to send them to the chat for discussion first
 
 > Requires `ANTHROPIC_API_KEY` set in your environment (`~/.zshrc`).
 
