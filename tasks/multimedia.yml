@@ -1,7 +1,23 @@
-- name: Install VLC & Spotify
-  community.general.homebrew:
+# macOS
+- name: Install VLC & Spotify (macOS)
+  community.general.homebrew_cask:
     name:
       - spotify
       - vlc
     state: present
   when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Install VLC (Linux)
+  become: true
+  apt:
+    name: vlc
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Spotify via snap (Linux)
+  become: true
+  community.general.snap:
+    name: spotify
+    state: present
+  when: ansible_os_family == "Debian"

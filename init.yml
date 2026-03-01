@@ -1,29 +1,52 @@
 - hosts: localhost
   gather_facts: true
   pre_tasks:
-    - name: Ensuring Homebrew is installed
-      become: true
+    # macOS - Homebrew
+    - name: Ensuring Homebrew is installed (macOS)
       stat:
-        path: /usr/local/bin/brew
+        path: "{{ '/opt/homebrew/bin/brew' if ansible_architecture == 'arm64' else '/usr/local/bin/brew' }}"
       register: homebrew_check
       when: ansible_os_family == "Darwin"
 
-    - name: Install homebrew if not installed
+    - name: Install Homebrew if not installed (macOS)
       become: false
       shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      delay: 3
-      when: homebrew_check.stat.exists == false and ansible_os_family == "Darwin"
+      when: ansible_os_family == "Darwin" and not homebrew_check.stat.exists
 
-    - name: Updating Homebrew
-      homebrew:
+    - name: Update Homebrew (macOS)
+      community.general.homebrew:
         update_homebrew: true
-      when: homebrew_check.stat.exists
+      when: ansible_os_family == "Darwin" and homebrew_check.stat.exists
+
+    # Linux - apt
+    - name: Update apt cache (Linux)
+      become: true
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install base dependencies (Linux)
+      become: true
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - build-essential
+          - ca-certificates
+          - gnupg
+          - apt-transport-https
+          - software-properties-common
+        state: present
+      when: ansible_os_family == "Debian"
 
   tags:
     - install
     - core
 
   tasks:
+    - import_tasks: tasks/yubikey.yml
     - import_tasks: tasks/git-setup.yml
     - import_tasks: tasks/core-setup.yml
     - import_tasks: tasks/zsh.yml

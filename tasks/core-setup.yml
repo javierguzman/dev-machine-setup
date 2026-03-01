@@ -1,4 +1,5 @@
-- name: Install core tools
+# macOS
+- name: Install core tools (macOS)
   community.general.homebrew:
     name:
       - ripgrep
@@ -8,3 +9,25 @@
       - fzf
       - tldr
     state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Install core tools (Linux)
+  become: true
+  apt:
+    name:
+      - ripgrep
+      - ffmpeg
+      - stow
+      - fzf
+      - tldr
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install yt-dlp (Linux)
+  become: true
+  get_url:
+    url: https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+    dest: /usr/local/bin/yt-dlp
+    mode: '0755'
+  when: ansible_os_family == "Debian"

@@ -1,8 +1,41 @@
-- name: Install social apps
-  community.general.homebrew:
+# macOS
+- name: Install social apps (macOS)
+  community.general.homebrew_cask:
     name:
       - discord
       - whatsapp
       - signal
     state: present
   when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Install WhatsApp via snap (Linux)
+  become: true
+  community.general.snap:
+    name: whatsapp-for-linux
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Discord via snap (Linux)
+  become: true
+  community.general.snap:
+    name: discord
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add Signal apt repository (Linux)
+  become: true
+  shell: |
+    wget -O- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor > /usr/share/keyrings/signal-desktop-keyring.gpg
+    echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' > /etc/apt/sources.list.d/signal-xenial.list
+    apt update
+  args:
+    creates: /etc/apt/sources.list.d/signal-xenial.list
+  when: ansible_os_family == "Debian"
+
+- name: Install Signal (Linux)
+  become: true
+  apt:
+    name: signal-desktop
+    state: present
+  when: ansible_os_family == "Debian"

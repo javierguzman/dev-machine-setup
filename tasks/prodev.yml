@@ -1,10 +1,84 @@
-- name: Install Developer Pro Tools
+# macOS
+- name: Add yabai and skhd tap (macOS)
+  community.general.homebrew_tap:
+    name: koekeishiya/formulae
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Install Developer Pro Tools formulae (macOS)
   community.general.homebrew:
     name:
       - neovim
       - tmux
       - koekeishiya/formulae/yabai
-      - iterm2
-      - skhd
+      - koekeishiya/formulae/skhd
+      - lazygit
+      - fzf
     state: present
-    when: ansible_os_family == "Darwin"
+  when: ansible_os_family == "Darwin"
+
+- name: Install Developer Pro Tools casks (macOS)
+  community.general.homebrew_cask:
+    name:
+      - iterm2
+      - alacritty
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Install Nerd Fonts (macOS)
+  community.general.homebrew_cask:
+    name:
+      - font-fira-code-nerd-font
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Start yabai service (macOS)
+  shell: yabai --start-service
+  when: ansible_os_family == "Darwin"
+  ignore_errors: yes
+
+- name: Start skhd service (macOS)
+  shell: skhd --start-service
+  when: ansible_os_family == "Darwin"
+  ignore_errors: yes
+
+# Linux
+- name: Add neovim PPA (Linux)
+  become: true
+  apt_repository:
+    repo: ppa:neovim-ppa/unstable
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Developer Pro Tools (Linux)
+  become: true
+  apt:
+    name:
+      - neovim
+      - tmux
+      - fzf
+      - alacritty
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install lazygit (Linux)
+  become: true
+  shell: |
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf /tmp/lazygit.tar.gz -C /tmp lazygit
+    install /tmp/lazygit /usr/local/bin
+  args:
+    creates: /usr/local/bin/lazygit
+  when: ansible_os_family == "Debian"
+
+- name: Install FiraCode Nerd Font (Linux)
+  become: false
+  shell: |
+    mkdir -p ~/.local/share/fonts
+    curl -Lo /tmp/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
+    unzip -o /tmp/FiraCode.zip -d ~/.local/share/fonts/FiraCode
+    fc-cache -fv
+  args:
+    creates: "{{ ansible_user_dir }}/.local/share/fonts/FiraCode"
+  when: ansible_os_family == "Debian"

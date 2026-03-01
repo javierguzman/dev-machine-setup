@@ -1,8 +1,106 @@
-- name: Install office tools
-  community.general.homebrew:
+# macOS
+- name: Install office tools (macOS)
+  community.general.homebrew_cask:
     name:
       - obsidian
       - firefox
       - thunderbird
+      - brave-browser
+      - jetbrains-toolbox
+      - synology-drive
+      - drawio
+      - protonvpn
+      - proton-mail-bridge
+      - wireguard
     state: present
   when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Install Firefox and Thunderbird (Linux)
+  become: true
+  apt:
+    name:
+      - firefox
+      - thunderbird
+      - wireguard
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Obsidian via snap (Linux)
+  become: true
+  community.general.snap:
+    name: obsidian
+    classic: yes
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add Brave apt repository (Linux)
+  become: true
+  shell: |
+    curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" > /etc/apt/sources.list.d/brave-browser-release.list
+    apt update
+  args:
+    creates: /etc/apt/sources.list.d/brave-browser-release.list
+  when: ansible_os_family == "Debian"
+
+- name: Install Brave browser (Linux)
+  become: true
+  apt:
+    name: brave-browser
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install JetBrains Toolbox (Linux)
+  become: false
+  shell: |
+    curl -fsSL https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release \
+      | python3 -c "import sys,json; releases=json.load(sys.stdin); print(releases['TBA'][0]['downloads']['linux']['link'])" \
+      | xargs curl -fsSL -o /tmp/jetbrains-toolbox.tar.gz
+    tar xf /tmp/jetbrains-toolbox.tar.gz -C /tmp
+    find /tmp -name "jetbrains-toolbox" -type f -exec mv {} ~/.local/bin/jetbrains-toolbox \;
+  args:
+    creates: "{{ ansible_user_dir }}/.local/bin/jetbrains-toolbox"
+  when: ansible_os_family == "Debian"
+
+- name: Add ProtonVPN apt repository (Linux)
+  become: true
+  shell: |
+    wget -q https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.6_all.deb -O /tmp/protonvpn-release.deb
+    apt install -y /tmp/protonvpn-release.deb
+    apt update
+  args:
+    creates: /etc/apt/sources.list.d/protonvpn-stable.list
+  when: ansible_os_family == "Debian"
+
+- name: Install ProtonVPN (Linux)
+  become: true
+  apt:
+    name: proton-vpn-gnome-desktop
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Proton Mail Bridge (Linux)
+  become: true
+  shell: |
+    wget -q https://proton.me/download/bridge/protonmail-bridge_3.12.0-1_amd64.deb -O /tmp/protonbridge.deb
+    apt install -y /tmp/protonbridge.deb
+  args:
+    creates: /usr/bin/proton-bridge
+  when: ansible_os_family == "Debian"
+
+- name: Install Synology Drive (Linux)
+  become: true
+  shell: |
+    curl -fsSL "https://global.download.synology.com/download/Utility/SynologyDriveClient/3.5.1-16101/Ubuntu/Installer/x86_64/synology-drive-client-16101.x86_64.deb" -o /tmp/synology-drive.deb
+    apt install -y /tmp/synology-drive.deb
+  args:
+    creates: /usr/bin/synology-drive
+  when: ansible_os_family == "Debian"
+
+- name: Install draw.io via snap (Linux)
+  become: true
+  community.general.snap:
+    name: drawio
+    state: present
+  when: ansible_os_family == "Debian"

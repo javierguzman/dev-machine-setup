@@ -1,8 +1,43 @@
-- name: Install VSCode, iterm2, Chrome and Insomnia
-  community.general.homebrew:
+# macOS
+- name: Install dev tools (macOS)
+  community.general.homebrew_cask:
     name:
       - visual-studio-code
       - insomnia
       - google-chrome
     state: present
   when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Add VSCode apt repository (Linux)
+  become: true
+  shell: |
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
+    apt update
+  args:
+    creates: /etc/apt/sources.list.d/vscode.list
+  when: ansible_os_family == "Debian"
+
+- name: Install VSCode (Linux)
+  become: true
+  apt:
+    name: code
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Insomnia via snap (Linux)
+  become: true
+  community.general.snap:
+    name: insomnia
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Google Chrome (Linux)
+  become: true
+  shell: |
+    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb
+    apt install -y /tmp/chrome.deb
+  args:
+    creates: /usr/bin/google-chrome
+  when: ansible_os_family == "Debian"

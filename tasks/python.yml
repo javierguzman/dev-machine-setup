@@ -1,20 +1,51 @@
-- name: Install Pyenv using Homebrew
+# macOS
+- name: Install Pyenv (macOS)
   community.general.homebrew:
     name: pyenv
     state: present
   when: ansible_os_family == "Darwin"
 
-- name: Add Pyenv initialization to shell profile (Zsh)
+# Linux
+- name: Install pyenv build dependencies (Linux)
+  become: true
+  apt:
+    name:
+      - libssl-dev
+      - zlib1g-dev
+      - libbz2-dev
+      - libreadline-dev
+      - libsqlite3-dev
+      - libncursesw5-dev
+      - xz-utils
+      - tk-dev
+      - libxml2-dev
+      - libxmlsec1-dev
+      - libffi-dev
+      - liblzma-dev
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install pyenv (Linux)
+  shell: curl https://pyenv.run | bash
+  args:
+    creates: "{{ ansible_user_dir }}/.pyenv/bin/pyenv"
+  when: ansible_os_family == "Debian"
+
+# Cross-platform
+- name: Add Pyenv initialization to shell profile
   lineinfile:
     path: "{{ ansible_user_dir }}/.zshrc"
     line: 'eval "$(pyenv init --path)"'
     create: yes
     insertafter: EOF
-  when: ansible_os_family == "Darwin"
 
 - name: Install Python 3.11 using Pyenv
   shell: |
-    pyenv install 3.11
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init --path)"
+    pyenv install -s 3.11
     pyenv global 3.11
     pyenv rehash
-  when: ansible_os_family == "Darwin"
+  args:
+    executable: /bin/bash

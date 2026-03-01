@@ -21,3 +21,28 @@
     value: "main"
   tags:
     - git
+
+# GPG commit signing (requires YubiKey with GPG key loaded)
+- name: Configure GPG signing key
+  git_config:
+    name: user.signingkey
+    scope: global
+    value: "34D3A6FB8181BEA7"
+  tags:
+    - git
+
+- name: Enable GPG commit signing
+  git_config:
+    name: commit.gpgsign
+    scope: global
+    value: "true"
+  tags:
+    - git
+
+- name: Set GPG program
+  git_config:
+    name: gpg.program
+    scope: global
+    value: "gpg"
+  tags:
+    - git

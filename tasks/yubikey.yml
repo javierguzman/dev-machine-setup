@@ -1,0 +1,126 @@
+# ─── macOS ────────────────────────────────────────────────────────────────────
+
+- name: Install GPG Suite (macOS)
+  community.general.homebrew_cask:
+    name: gpg-suite
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Install YubiKey tools (macOS)
+  community.general.homebrew:
+    name:
+      - yubico-piv-tool
+      - ykman
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Install GPG and smartcard tools (Linux)
+  become: true
+  apt:
+    name:
+      - gnupg2
+      - scdaemon
+      - pcscd
+      - pcsc-tools
+      - libpcsclite-dev
+      - pinentry-curses
+      - pinentry-gtk2
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install yubikey-manager via pip (Linux)
+  become: true
+  pip:
+    name: yubikey-manager
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install yubico-piv-tool (Linux)
+  become: true
+  apt:
+    name: yubico-piv-tool
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Enable pcscd service (Linux)
+  become: true
+  systemd:
+    name: pcscd
+    enabled: yes
+    state: started
+  when: ansible_os_family == "Debian"
+
+# ─── GPG config (cross-platform) ──────────────────────────────────────────────
+
+- name: Ensure ~/.gnupg directory exists
+  file:
+    path: "{{ ansible_user_dir }}/.gnupg"
+    state: directory
+    mode: '0700'
+
+- name: Configure gpg-agent (cross-platform)
+  copy:
+    dest: "{{ ansible_user_dir }}/.gnupg/gpg-agent.conf"
+    mode: '0600'
+    content: |
+      default-cache-ttl 600
+      max-cache-ttl 7200
+
+- name: Configure gpg (cross-platform)
+  copy:
+    dest: "{{ ansible_user_dir }}/.gnupg/gpg.conf"
+    mode: '0600'
+    content: |
+      auto-key-retrieve
+
+- name: Configure dirmngr (cross-platform)
+  copy:
+    dest: "{{ ansible_user_dir }}/.gnupg/dirmngr.conf"
+    mode: '0600'
+    content: |
+      keyserver hkps://keys.openpgp.org
+
+# ─── SSH config ───────────────────────────────────────────────────────────────
+
+- name: Ensure ~/.ssh directory exists
+  file:
+    path: "{{ ansible_user_dir }}/.ssh"
+    state: directory
+    mode: '0700'
+
+- name: Configure SSH for GitHub (macOS)
+  copy:
+    dest: "{{ ansible_user_dir }}/.ssh/config"
+    mode: '0600'
+    content: |
+      Host github.com
+        AddKeysToAgent yes
+        UseKeychain yes
+        IdentityFile ~/.ssh/id_ed25519
+  when: ansible_os_family == "Darwin"
+
+- name: Configure SSH for GitHub (Linux)
+  copy:
+    dest: "{{ ansible_user_dir }}/.ssh/config"
+    mode: '0600'
+    content: |
+      Host github.com
+        AddKeysToAgent yes
+        IdentityFile ~/.ssh/id_ed25519
+        PKCS11Provider /usr/lib/x86_64-linux-gnu/libykcs11.so
+  when: ansible_os_family == "Debian"
+
+# ─── Post-install notes ───────────────────────────────────────────────────────
+
+- name: Print YubiKey setup reminder
+  debug:
+    msg:
+      - "YubiKey setup complete. Manual steps required:"
+      - "1. Insert your YubiKey"
+      - "2. Import your public GPG key: gpg --import your-public-key.asc"
+      - "   Or fetch from keyserver: gpg --recv-keys 34D3A6FB8181BEA7"
+      - "3. Trust the key: gpg --edit-key 34D3A6FB8181BEA7 -> trust -> 5 -> quit"
+      - "4. Verify GPG sees the card: gpg --card-status"
+      - "5. Verify SSH key: ssh-add -L"

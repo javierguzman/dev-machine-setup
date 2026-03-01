@@ -1,13 +1,17 @@
-- name: Cloning dotfiles
+# Cross-platform
+- name: Clone dotfiles
   ansible.builtin.git:
     repo: https://github.com/javierguzman/.dotfiles
     dest: "{{ lookup('env', 'HOME') }}/.dotfiles"
     recursive: yes
     update: yes
     accept_hostkey: yes
-    version: master
+    version: main
+
+- name: Stow dotfiles (macOS)
+  ansible.builtin.shell: cd $HOME/.dotfiles && STOW_FOLDERS="bin,stow,nvim,tmux,bash,zsh,yabai,skhd,alacritty" ./install.sh
   when: ansible_os_family == "Darwin"
 
-- name: Stow dotfiles
-  ansible.builtin.shell: cd $HOME/.dotfiles && ./setup.sh
-  when: ansible_os_family == "Darwin"
+- name: Stow dotfiles (Linux)
+  ansible.builtin.shell: cd $HOME/.dotfiles && STOW_FOLDERS="bin,stow,nvim,tmux,bash,zsh,alacritty" ./install.sh
+  when: ansible_os_family == "Debian"

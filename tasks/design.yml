@@ -1,5 +1,6 @@
-- name: Install Design tools
-  community.general.homebrew:
+# macOS
+- name: Install Design tools (macOS)
+  community.general.homebrew_cask:
     name:
       - darktable
       - drawio
@@ -9,3 +10,20 @@
       - affinity-designer
     state: present
   when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Install design tools (Linux)
+  become: true
+  apt:
+    name:
+      - darktable
+      - gimp
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install draw.io via snap (Linux)
+  become: true
+  community.general.snap:
+    name: drawio
+    state: present
+  when: ansible_os_family == "Debian"
