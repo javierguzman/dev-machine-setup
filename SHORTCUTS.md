@@ -4,6 +4,21 @@
 
 ---
 
+## Terminal (zsh)
+
+| Shortcut | Action |
+|----------|--------|
+| `Alt + Left` / `Alt + Right` | Jump one word backward / forward |
+| `Ctrl + A` | Go to beginning of line |
+| `Ctrl + E` | Go to end of line |
+| `Ctrl + W` | Delete word before cursor |
+| `Ctrl + U` | Delete everything before cursor |
+| `Ctrl + K` | Delete everything after cursor |
+| `Ctrl + L` | Clear screen |
+| `Ctrl + R` | Search command history (reverse) |
+
+---
+
 ## tmux
 
 ### Sessions & Windows
@@ -57,6 +72,27 @@
 | `Space + o` | Toggle outline panel — all functions/symbols in file |
 | `Space + lg` | Open LazyGit |
 | `Space + k` | Toggle kubectl panel |
+
+### AI Assistant (avante.nvim — Claude Sonnet)
+
+| Shortcut | Action |
+|----------|--------|
+| `Space + aa` | Open / toggle AI chat sidebar |
+| `Space + ae` | Ask Claude to edit the selected code (visual mode) |
+| `Space + ar` | Refresh / reset the chat |
+
+> **Workflow — chat about your code:**
+> 1. `Space+aa` to open the sidebar
+> 2. Type your question — Claude can already see the current file
+> 3. Mention other files with `@filename` to attach them as context
+> 4. Claude suggests changes as a diff — accept or reject inline
+
+> **Workflow — edit a specific block:**
+> 1. Select lines in visual mode (`v` or `V`)
+> 2. `Space+ae` — type your instruction (e.g. "refactor this to use async/await")
+> 3. Review the diff and accept or reject
+
+> Requires `ANTHROPIC_API_KEY` set in your environment (`~/.zshrc`).
 
 ### Go To Line
 
@@ -172,8 +208,8 @@
 
 | Shortcut | Action |
 |----------|--------|
-| `Alt + Right` | Focus next window |
-| `Alt + Left` | Focus previous window |
+| `Ctrl + Alt + Right` | Focus next window |
+| `Ctrl + Alt + Left` | Focus previous window |
 | `Alt + s` | Focus left display |
 | `Alt + g` | Focus right display |
 
