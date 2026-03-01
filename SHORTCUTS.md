@@ -4,6 +4,59 @@
 
 ---
 
+## Quick Reference — Most Used
+
+### tmux
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Z` | Open project picker |
+| `Prefix + \|` | Split pane vertically |
+| `Prefix + -` | Split pane horizontally |
+| `Ctrl+h/j/k/l` | Move between panes |
+| `Prefix + m` | Maximize / restore pane |
+| `Prefix + [` → `v` → `y` | Copy to system clipboard |
+
+### Neovim — Workflow
+
+| Shortcut | Action |
+|----------|--------|
+| `Space + F` | Open project picker |
+| `Space + e` | Show / hide file tree |
+| `Space + ff` | Find file by name |
+| `Space + fg` | Search text across all files |
+| `42G` or `:42` | Go to line 42 |
+| `Space + y` | Copy to system clipboard (paste with Cmd+V anywhere) |
+
+### Neovim — Code Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| `K` | Show documentation popup |
+| `gd` | Peek definition in floating popup — stay in current file |
+| `gi` | Jump into implementation |
+| `Ctrl+o` | Go back to where you were |
+| `gf` | Show all references and definition in a panel |
+| `Space + rn` | Rename symbol everywhere |
+
+### Neovim — AI Assistant
+
+| Shortcut | Action |
+|----------|--------|
+| `Space + aa` | Open AI chat |
+| `Space + ae` | Inline edit with AI instruction |
+| `Space + ac` | Send selection to chat (visual mode) |
+
+### Window Management
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Alt+Left/Right` | Cycle between windows |
+| `Shift+Alt+m` | Maximize / restore window |
+| `Shift+Alt+Left/Right` | Snap to left / right half |
+
+---
+
 ## Terminal (zsh)
 
 | Shortcut | Action |
@@ -82,27 +135,62 @@
 | `Space + ae` | Inline AI edit — type a prompt, Claude edits in place |
 | `Space + ac` | Add visual selection to the open chat (visual mode) |
 
-**Inside the chat buffer:**
+**Inside the chat buffer — actions:**
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+s` (insert) / `Enter` (normal) | Send message |
-| `#buffer` | Reference current buffer as context |
-| `#file` | Reference a specific file |
-| `q` | Close chat |
+| `Enter` / `Ctrl+s` | Send message |
+| `Ctrl+c` | Close chat |
+| `q` | Stop generation |
+| `gr` | Regenerate last response |
+| `gx` | Clear chat history |
+| `gy` | Yank code from response |
+| `ga` | Change model / adapter |
+| `]]` / `[[` | Jump to next / previous message |
+| `?` | Show all available keymaps |
+
+**Context — attach things to your message with `#`:**
+
+| Variable | What it sends |
+|----------|---------------|
+| `#{buffer}` | Current file contents |
+| `#{buffer:filename}` | A specific open buffer by name |
+| `#{buffers}` | All open buffers |
+| `#{selection}` | Your last visual selection |
+| `#{diagnostics}` | LSP errors and warnings in current file |
+| `#{diff}` | Current git diff (staged + unstaged) |
+| `#{terminal}` | Latest output from terminal buffer |
+| `#{viewport}` | Exactly what is visible on screen |
+
+**Slash commands — type `/` in the chat:**
+
+| Command | Action |
+|---------|--------|
+| `/buffer` | Pick from open buffers and add to chat |
+| `/file` | Pick a file from the project and add to chat |
+| `/symbols` | Add a tree-sitter outline of a file (functions, classes) |
+| `/fetch` | Fetch a URL and add its content to chat |
+| `/compact` | Clear message history but keep a summary in context |
+| `/help` | Add content from Vim help tags |
+| `/now` | Insert current date and time |
 
 > **Workflow — chat about your code:**
 > 1. `Space+aa` to open the chat
-> 2. Ask anything — reference your current buffer with `#buffer`
-> 3. Attach other files with `#file:path/to/file`
-> 4. Claude replies inline; apply suggestions manually or ask it to edit
+> 2. Type your question with `#{buffer}` to include the current file
+> 3. Add more files with `/file` or `#{buffer:filename}`
+> 4. Send with `Enter`, stop with `q`, regenerate with `gr`
+
+> **Workflow — debug with context:**
+> 1. `Space+aa` to open chat
+> 2. Type your question and include `#{diagnostics}` for LSP errors and `#{diff}` to show recent changes
+> 3. Ask Claude to explain or fix
 
 > **Workflow — edit a specific block:**
 > 1. Select lines in visual mode (`v` or `V`)
-> 2. `Space+ae` — type your instruction (e.g. "refactor this to use async/await")
+> 2. `Space+ae` — type instruction (e.g. "refactor this to use async/await")
 > 3. Claude edits the selection in place
 >
-> Or: select lines → `Space+ac` to send them to the chat for discussion first
+> Or: select → `Space+ac` to send to chat first for discussion
 
 > Requires `ANTHROPIC_API_KEY` set in your environment (`~/.zshrc`).
 

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shortcuts Cheatsheet</title>
+<style>
+  :root {
+    --bg: #1a1b26;
+    --surface: #24283b;
+    --surface2: #2e3348;
+    --border: #3b4261;
+    --text: #c0caf5;
+    --muted: #737aa2;
+    --blue: #7aa2f7;
+    --cyan: #7dcfff;
+    --green: #9ece6a;
+    --yellow: #e0af68;
+    --orange: #ff9e64;
+    --red: #f7768e;
+    --purple: #bb9af7;
+    --magenta: #c678dd;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 28px;
+    color: var(--blue);
+    border-bottom: 2px solid var(--blue);
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .legend {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 28px;
+  }
+
+  .legend code {
+    color: var(--yellow);
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* Two-column layout for quick ref */
+  .quick-ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .quick-ref-grid .card:last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Section colours */
+  h2 { font-size: 20px; margin: 32px 0 16px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+  h2.tmux       { color: var(--cyan);   border-color: var(--cyan); }
+  h2.terminal   { color: var(--green);  border-color: var(--green); }
+  h2.nvim       { color: var(--purple); border-color: var(--purple); }
+  h2.window     { color: var(--orange); border-color: var(--orange); }
+  h2.quickref   { color: var(--yellow); border-color: var(--yellow); }
+
+  h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 20px 0 8px; }
+
+  h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .callout {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Header colours per section */
+  .tmux   .card-header { background: #1a2e38; color: var(--cyan); }
+  .nvim   .card-header { background: #2a2040; color: var(--purple); }
+  .window .card-header { background: #2e2010; color: var(--orange); }
+  .quick  .card-header { background: #2a2010; color: var(--yellow); }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  td {
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--surface2); }
+
+  td:first-child {
+    white-space: nowrap;
+    width: 42%;
+  }
+
+  td:last-child {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* Shortcut key styling */
+  code, kbd {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 11.5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--yellow);
+    white-space: nowrap;
+  }
+
+  /* Callout boxes */
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .callout strong { color: var(--text); }
+  .callout .step { color: var(--cyan); font-weight: 600; margin-right: 6px; }
+
+  /* Section divider */
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* Full-width section tables */
+  .section-table .card { margin-bottom: 12px; }
+
+  @media print {
+    :root {
+      --bg: #ffffff;
+      --surface: #f4f4f8;
+      --surface2: #eaeaf2;
+      --border: #ccccdd;
+      --text: #1a1b26;
+      --muted: #44475a;
+      --blue: #2755cc;
+      --cyan: #006a8a;
+      --green: #1a6e00;
+      --yellow: #7a4a00;
+      --orange: #b04000;
+      --red: #b0002a;
+      --purple: #5500bb;
+      --magenta: #770077;
+    }
+    body { background: #fff; color: #1a1b26; padding: 16px; }
+    .card { break-inside: avoid; }
+    .quick-ref-grid { break-inside: avoid; }
+    code, kbd {
+      background: #eaeaf2 !important;
+      border-color: #aaaacc !important;
+      color: #5500bb !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .card-header {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .tmux   .card-header { background: #d0eef8 !important; color: #006a8a !important; }
+    .nvim   .card-header { background: #ebe0f8 !important; color: #5500bb !important; }
+    .window .card-header { background: #fde8d0 !important; color: #b04000 !important; }
+    .quick  .card-header { background: #fdf0d0 !important; color: #7a4a00 !important; }
+    tr:nth-child(even) td {
+      background: #f0f0f8 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .callout {
+      background: #eef0ff !important;
+      border-left-color: #2755cc !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    h2.tmux     { color: #006a8a !important; border-color: #006a8a !important; }
+    h2.terminal { color: #1a6e00 !important; border-color: #1a6e00 !important; }
+    h2.nvim     { color: #5500bb !important; border-color: #5500bb !important; }
+    h2.window   { color: #b04000 !important; border-color: #b04000 !important; }
+    h2.quickref { color: #7a4a00 !important; border-color: #7a4a00 !important; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Shortcuts Cheatsheet</h1>
+<p class="legend">
+  <code>Prefix</code> = Ctrl+a &nbsp;·&nbsp;
+  <code>Space</code> = &lt;leader&gt; &nbsp;·&nbsp;
+  <code>C-</code> = Ctrl &nbsp;·&nbsp;
+  <code>S-</code> = Shift
+</p>
+
+<!-- ══════════════════════════════════════════════ QUICK REF -->
+<h2 class="quickref">⚡ Quick Reference — Most Used</h2>
+
+<div class="quick-ref-grid">
+
+  <div class="card quick">
+    <div class="card-header">tmux</div>
+    <table>
+      <tr><td><code>Ctrl+Z</code></td><td>Open project picker</td></tr>
+      <tr><td><code>Prefix + |</code></td><td>Split pane vertically</td></tr>
+      <tr><td><code>Prefix + -</code></td><td>Split pane horizontally</td></tr>
+      <tr><td><code>Ctrl+h/j/k/l</code></td><td>Move between panes</td></tr>
+      <tr><td><code>Prefix + m</code></td><td>Maximize / restore pane</td></tr>
+      <tr><td><code>Prefix+[</code> → <code>v</code> → <code>y</code></td><td>Copy to system clipboard</td></tr>
+    </table>
+  </div>
+
+  <div class="card quick">
+    <div class="card-header">Neovim — Workflow</div>
+    <table>
+      <tr><td><code>Space+F</code></td><td>Open project picker</td></tr>
+      <tr><td><code>Space+e</code></td><td>Show / hide file tree</td></tr>
+      <tr><td><code>Space+ff</code></td><td>Find file by name</td></tr>
+      <tr><td><code>Space+fg</code></td><td>Search text across all files</td></tr>
+      <tr><td><code>42G</code> or <code>:42</code></td><td>Go to line 42</td></tr>
+      <tr><td><code>Space+y</code></td><td>Copy to system clipboard</td></tr>
+    </table>
+  </div>
+
+  <div class="card quick">
+    <div class="card-header">Neovim — Code Navigation</div>
+    <table>
+      <tr><td><code>K</code></td><td>Show documentation popup</td></tr>
+      <tr><td><code>gd</code></td><td>Peek definition — stay in current file</td></tr>
+      <tr><td><code>gi</code></td><td>Jump into implementation</td></tr>
+      <tr><td><code>Ctrl+o</code></td><td>Go back to where you were</td></tr>
+      <tr><td><code>gf</code></td><td>Show all references in a panel</td></tr>
+      <tr><td><code>Space+rn</code></td><td>Rename symbol everywhere</td></tr>
+    </table>
+  </div>
+
+  <div class="card quick">
+    <div class="card-header">Neovim — AI Assistant</div>
+    <table>
+      <tr><td><code>Space+aa</code></td><td>Open AI chat</td></tr>
+      <tr><td><code>Space+ae</code></td><td>Inline edit with AI instruction</td></tr>
+      <tr><td><code>Space+ac</code></td><td>Send selection to chat</td></tr>
+      <tr><td><code>#{buffer}</code> / <code>#{diagnostics}</code></td><td>Attach file / LSP errors</td></tr>
+      <tr><td><code>/file</code> / <code>/symbols</code></td><td>Add file or outline to chat</td></tr>
+      <tr><td><code>gr</code> / <code>gy</code></td><td>Regenerate / yank code from reply</td></tr>
+    </table>
+  </div>
+
+  <div class="card quick">
+    <div class="card-header">Window Management</div>
+    <table>
+      <tr><td><code>Ctrl+Alt+Left/Right</code></td><td>Cycle between windows</td></tr>
+      <tr><td><code>Shift+Alt+m</code></td><td>Maximize / restore window</td></tr>
+      <tr><td><code>Shift+Alt+Left/Right</code></td><td>Snap to left / right half</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════ TERMINAL -->
+<h2 class="terminal">Terminal (zsh)</h2>
+<div class="card">
+  <table>
+    <tr><td><code>Alt+Left</code> / <code>Alt+Right</code></td><td>Jump one word backward / forward</td></tr>
+    <tr><td><code>Ctrl+A</code></td><td>Go to beginning of line</td></tr>
+    <tr><td><code>Ctrl+E</code></td><td>Go to end of line</td></tr>
+    <tr><td><code>Ctrl+W</code></td><td>Delete word before cursor</td></tr>
+    <tr><td><code>Ctrl+U</code></td><td>Delete everything before cursor</td></tr>
+    <tr><td><code>Ctrl+K</code></td><td>Delete everything after cursor</td></tr>
+    <tr><td><code>Ctrl+L</code></td><td>Clear screen</td></tr>
+    <tr><td><code>Ctrl+R</code></td><td>Search command history (reverse)</td></tr>
+  </table>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════ TMUX -->
+<h2 class="tmux">tmux</h2>
+
+<h3>Sessions &amp; Windows</h3>
+<div class="card tmux">
+  <table>
+    <tr><td><code>Ctrl+Z</code> (shell) / <code>Space+F</code> (nvim)</td><td>Open project picker — fuzzy-find and switch projects</td></tr>
+    <tr><td><code>Prefix+c</code></td><td>New window</td></tr>
+    <tr><td><code>Prefix+,</code></td><td>Rename current window</td></tr>
+    <tr><td><code>Prefix+[1-9]</code></td><td>Jump to window by number</td></tr>
+    <tr><td><code>Prefix+n</code> / <code>Prefix+p</code></td><td>Next / previous window</td></tr>
+    <tr><td><code>Prefix+X</code></td><td>Kill window</td></tr>
+    <tr><td><code>Prefix+r</code></td><td>Reload tmux config</td></tr>
+    <tr><td><code>Prefix+i</code></td><td>Open cheatsheet (tmux-cht.sh)</td></tr>
+  </table>
+</div>
+
+<h3>Panes</h3>
+<div class="card tmux">
+  <table>
+    <tr><td><code>Prefix+|</code></td><td>Split pane vertically (left/right)</td></tr>
+    <tr><td><code>Prefix+-</code></td><td>Split pane horizontally (top/bottom)</td></tr>
+    <tr><td><code>Ctrl+h/j/k/l</code></td><td>Move between panes (and nvim splits)</td></tr>
+    <tr><td><code>Prefix+h/j/k/l</code></td><td>Resize pane</td></tr>
+    <tr><td><code>Prefix+m</code></td><td>Maximize / restore pane (zoom)</td></tr>
+    <tr><td><code>Prefix+x</code></td><td>Kill pane</td></tr>
+  </table>
+</div>
+
+<h3>Copy to Clipboard</h3>
+<div class="card tmux">
+  <table>
+    <tr><td><code>Prefix+[</code></td><td>Enter copy mode</td></tr>
+    <tr><td><code>v</code></td><td>Start selection</td></tr>
+    <tr><td><code>y</code></td><td>Copy to system clipboard — paste with Cmd+V anywhere</td></tr>
+    <tr><td><code>q</code></td><td>Exit copy mode</td></tr>
+  </table>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════ NEOVIM -->
+<h2 class="nvim">Neovim</h2>
+
+<h3>Workflow</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Space+F</code></td><td>Open project picker (tmux-sessionizer)</td></tr>
+    <tr><td><code>Space+e</code></td><td>Toggle file tree (nvim-tree)</td></tr>
+    <tr><td><code>Space+ff</code></td><td>Find files by name (Telescope)</td></tr>
+    <tr><td><code>Space+fg</code></td><td>Search text across all files (live grep)</td></tr>
+    <tr><td><code>Space+fs</code></td><td>Search word under cursor across all files</td></tr>
+    <tr><td><code>Space+fb</code></td><td>List open buffers — switch between open files</td></tr>
+    <tr><td><code>Space+fd</code></td><td>List all diagnostics (errors/warnings) in project</td></tr>
+    <tr><td><code>Space+o</code></td><td>Toggle outline panel — all functions/symbols in file</td></tr>
+    <tr><td><code>Space+lg</code></td><td>Open LazyGit</td></tr>
+    <tr><td><code>Space+k</code></td><td>Toggle kubectl panel</td></tr>
+  </table>
+</div>
+
+<div style="break-inside: avoid; page-break-inside: avoid;">
+<h3>AI Assistant (codecompanion — Claude Sonnet)</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Space+aa</code></td><td>Open / toggle AI chat buffer</td></tr>
+    <tr><td><code>Space+ap</code></td><td>Open action palette — all AI actions</td></tr>
+    <tr><td><code>Space+ae</code></td><td>Inline AI edit — type a prompt, Claude edits in place</td></tr>
+    <tr><td><code>Space+ac</code></td><td>Add visual selection to the open chat</td></tr>
+  </table>
+</div>
+</div>
+
+<div style="break-inside: avoid; page-break-inside: avoid;">
+<h3>AI Chat — Actions</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Enter</code> / <code>Ctrl+s</code></td><td>Send message</td></tr>
+    <tr><td><code>Ctrl+c</code></td><td>Close chat</td></tr>
+    <tr><td><code>q</code></td><td>Stop generation</td></tr>
+    <tr><td><code>gr</code></td><td>Regenerate last response</td></tr>
+    <tr><td><code>gx</code></td><td>Clear chat history</td></tr>
+    <tr><td><code>gy</code></td><td>Yank code from response</td></tr>
+    <tr><td><code>ga</code></td><td>Change model / adapter</td></tr>
+    <tr><td><code>]]</code> / <code>[[</code></td><td>Jump to next / previous message</td></tr>
+    <tr><td><code>?</code></td><td>Show all available keymaps</td></tr>
+  </table>
+</div>
+</div>
+
+<div style="break-inside: avoid; page-break-inside: avoid;">
+<h3>AI Chat — Context (type <code>#</code> in chat)</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>#{buffer}</code></td><td>Current file contents</td></tr>
+    <tr><td><code>#{buffer:filename}</code></td><td>A specific open buffer by name</td></tr>
+    <tr><td><code>#{buffers}</code></td><td>All open buffers</td></tr>
+    <tr><td><code>#{selection}</code></td><td>Last visual selection</td></tr>
+    <tr><td><code>#{diagnostics}</code></td><td>LSP errors and warnings in current file</td></tr>
+    <tr><td><code>#{diff}</code></td><td>Current git diff (staged + unstaged)</td></tr>
+    <tr><td><code>#{terminal}</code></td><td>Latest output from terminal buffer</td></tr>
+    <tr><td><code>#{viewport}</code></td><td>Exactly what is visible on screen</td></tr>
+  </table>
+</div>
+</div>
+
+<div style="break-inside: avoid; page-break-inside: avoid;">
+<h3>AI Chat — Slash Commands (type <code>/</code> in chat)</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>/buffer</code></td><td>Pick from open buffers and add to chat</td></tr>
+    <tr><td><code>/file</code></td><td>Pick a file from the project and add to chat</td></tr>
+    <tr><td><code>/symbols</code></td><td>Add a tree-sitter outline of a file (functions, classes)</td></tr>
+    <tr><td><code>/fetch</code></td><td>Fetch a URL and add its content to chat</td></tr>
+    <tr><td><code>/compact</code></td><td>Clear history but keep a summary in context</td></tr>
+    <tr><td><code>/help</code></td><td>Add content from Vim help tags</td></tr>
+    <tr><td><code>/now</code></td><td>Insert current date and time</td></tr>
+  </table>
+</div>
+</div>
+
+<div class="callout" style="break-inside: avoid; page-break-inside: avoid;">
+  <strong>Workflow — chat with full context:</strong><br>
+  <span class="step">1.</span><code>Space+aa</code> open chat &nbsp;
+  <span class="step">2.</span>Type question + <code>#{buffer}</code> to include current file &nbsp;
+  <span class="step">3.</span>Add more with <code>/file</code> or <code>#{diagnostics}</code> for LSP errors &nbsp;
+  <span class="step">4.</span><code>Enter</code> to send · <code>q</code> to stop · <code>gr</code> to regenerate
+</div>
+
+<h3>Go To Line</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>42G</code> or <code>:42</code></td><td>Jump to line 42</td></tr>
+    <tr><td><code>gg</code></td><td>Go to first line</td></tr>
+    <tr><td><code>G</code></td><td>Go to last line</td></tr>
+  </table>
+</div>
+
+<h3>LSP — Code Navigation</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>K</code></td><td>Hover docs — show documentation popup</td></tr>
+    <tr><td><code>gd</code></td><td>Peek definition — floating popup, stay in current file</td></tr>
+    <tr><td><code>gi</code></td><td>Go to implementation — jump inside</td></tr>
+    <tr><td><code>gD</code></td><td>Go to declaration</td></tr>
+    <tr><td><code>gf</code></td><td>Find all references + definition in a panel</td></tr>
+    <tr><td><code>Ctrl+o</code></td><td>Go back — return to where you were before the jump</td></tr>
+    <tr><td><code>Ctrl+i</code></td><td>Go forward in jump history</td></tr>
+    <tr><td><code>Space+rn</code></td><td>Rename symbol — updates every reference</td></tr>
+    <tr><td><code>Space+ca</code></td><td>Code actions — quick fixes, imports, refactors</td></tr>
+  </table>
+</div>
+
+<div class="callout">
+  <strong>Inspect without leaving your file:</strong><br>
+  <span class="step">1.</span>Hover on a function → <code>K</code> to read docs &nbsp;
+  <span class="step">2.</span><code>gd</code> to peek in a popup (<code>q</code> closes it, you never moved) &nbsp;
+  <span class="step">3.</span><code>gi</code> to jump inside &nbsp;
+  <span class="step">4.</span><code>Ctrl+o</code> to jump back
+</div>
+
+<h3>LSP — Diagnostics</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Space+d</code></td><td>Show diagnostics under cursor</td></tr>
+    <tr><td><code>Space+D</code></td><td>Show all diagnostics for current line</td></tr>
+    <tr><td><code>[d</code> / <code>]d</code></td><td>Jump to previous / next diagnostic</td></tr>
+  </table>
+</div>
+
+<h3>Copy &amp; Paste (Clipboard)</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Space+y</code> (visual)</td><td>Copy selection to system clipboard — paste with Cmd+V anywhere</td></tr>
+    <tr><td><code>Space+y</code> (normal)</td><td>Copy with motion — e.g. <code>Space+yy</code> = line, <code>Space+yw</code> = word</td></tr>
+    <tr><td><code>y</code></td><td>Copy to Vim register only — does NOT go to system clipboard</td></tr>
+    <tr><td><code>p</code></td><td>Paste from Vim register</td></tr>
+    <tr><td><code>Space+p</code> (visual)</td><td>Paste without overwriting the register</td></tr>
+  </table>
+</div>
+
+<h3>Editing</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>jk</code></td><td>Exit insert mode</td></tr>
+    <tr><td><code>J</code> / <code>K</code> (visual)</td><td>Move selected lines down / up</td></tr>
+    <tr><td><code>Space+x</code></td><td>Make current file executable (chmod +x)</td></tr>
+  </table>
+</div>
+
+<h3>Autocomplete</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Ctrl+j</code> / <code>Ctrl+k</code></td><td>Next / previous suggestion</td></tr>
+    <tr><td><code>Ctrl+Space</code></td><td>Trigger completion manually</td></tr>
+    <tr><td><code>Enter</code></td><td>Confirm selection</td></tr>
+    <tr><td><code>Ctrl+e</code></td><td>Dismiss menu</td></tr>
+  </table>
+</div>
+
+<h3>TypeScript / JavaScript</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Space+rf</code></td><td>Rename file and update all imports</td></tr>
+    <tr><td><code>Space+oi</code></td><td>Organize imports</td></tr>
+    <tr><td><code>Space+ru</code></td><td>Remove unused imports</td></tr>
+  </table>
+</div>
+
+<h3>Splits &amp; Tabs</h3>
+<div class="card nvim">
+  <table>
+    <tr><td><code>Space+sv</code> / <code>Space+sh</code></td><td>Split vertically / horizontally</td></tr>
+    <tr><td><code>Space+sx</code></td><td>Close split</td></tr>
+    <tr><td><code>Space+sm</code></td><td>Maximize / restore split</td></tr>
+    <tr><td><code>Ctrl+h/j/k/l</code></td><td>Navigate between splits and tmux panes</td></tr>
+    <tr><td><code>Space+to</code> / <code>Space+tx</code></td><td>Open / close tab</td></tr>
+    <tr><td><code>Space+tn</code> / <code>Space+tp</code></td><td>Next / previous tab</td></tr>
+  </table>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════ WINDOW MGMT -->
+<h2 class="window">Window Management (Yabai + skhd)</h2>
+
+<h3>Focus</h3>
+<div class="card window">
+  <table>
+    <tr><td><code>Ctrl+Alt+Right</code> / <code>Ctrl+Alt+Left</code></td><td>Focus next / previous window</td></tr>
+    <tr><td><code>Alt+s</code> / <code>Alt+g</code></td><td>Focus left / right display</td></tr>
+  </table>
+</div>
+
+<h3>Window Size</h3>
+<div class="card window">
+  <table>
+    <tr><td><code>Shift+Alt+m</code></td><td>Maximize / restore toggle</td></tr>
+    <tr><td><code>Shift+Alt+Left</code> / <code>Shift+Alt+Right</code></td><td>Snap to left / right half</td></tr>
+    <tr><td><code>Shift+Alt+e</code></td><td>Balance all windows equally</td></tr>
+    <tr><td><code>Shift+Ctrl+h/l</code></td><td>Resize window left / right</td></tr>
+    <tr><td><code>Shift+Ctrl+k/j</code></td><td>Resize window up / down</td></tr>
+  </table>
+</div>
+
+<h3>Move Windows</h3>
+<div class="card window">
+  <table>
+    <tr><td><code>Shift+Alt+h/j/k/l</code></td><td>Swap window with neighbor</td></tr>
+    <tr><td><code>Shift+Alt+s</code> / <code>Shift+Alt+g</code></td><td>Move window to left / right display</td></tr>
+    <tr><td><code>Shift+Alt+p</code> / <code>Shift+Alt+n</code></td><td>Move window to prev / next space</td></tr>
+    <tr><td><code>Shift+Alt+[1-7]</code></td><td>Move window to space number</td></tr>
+  </table>
+</div>
+
+<h3>Yabai Services</h3>
+<div class="card window">
+  <table>
+    <tr><td><code>Ctrl+Alt+r</code></td><td>Restart yabai</td></tr>
+    <tr><td><code>Ctrl+Alt+q</code> / <code>Ctrl+Alt+s</code></td><td>Stop / start yabai</td></tr>
+  </table>
+</div>
+
+</body>
+</html>
