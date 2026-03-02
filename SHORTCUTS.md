@@ -194,6 +194,65 @@
 
 > Requires `ANTHROPIC_API_KEY` set in your environment (`~/.zshrc`).
 
+### LazyGit (`Space + lg` to open)
+
+| Shortcut | Action |
+|----------|--------|
+| `j` / `k` | Move down / up |
+| `Tab` | Switch between panels |
+| `Enter` | Drill into / expand |
+| `?` | Show all keybindings for current panel |
+| `q` | Quit |
+
+**Staging**
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Stage / unstage file or hunk |
+| `a` | Stage / unstage all |
+
+**Commits**
+
+| Shortcut | Action |
+|----------|--------|
+| `c` | Commit |
+| `A` | Amend last commit |
+| `r` | Rename last commit message |
+
+**Branches**
+
+| Shortcut | Action |
+|----------|--------|
+| `n` | New branch |
+| `Space` | Checkout branch |
+| `d` | Delete branch |
+| `M` | Merge into current branch |
+| `R` | Rebase |
+
+**Stash**
+
+| Shortcut | Action |
+|----------|--------|
+| `s` | Stash changes |
+| `g` | Pop stash |
+
+**Push / Pull**
+
+| Shortcut | Action |
+|----------|--------|
+| `P` | Push |
+| `p` | Pull |
+
+**Diff**
+
+| Shortcut | Action |
+|----------|--------|
+| `Enter` (on file) | See individual hunks |
+| `e` | Open file in editor |
+| `+` / `-` | Expand / collapse diff |
+
+---
+
 ### Go To Line
 
 | Shortcut | Action |
