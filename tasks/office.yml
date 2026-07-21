@@ -11,6 +11,7 @@
       - drawio
       - protonvpn
       - proton-mail-bridge
+      - proton-drive
       - wireguard
     state: present
   when: ansible_os_family == "Darwin"

@@ -1,0 +1,26 @@
+# macOS
+# These are macOS-only tools (menu bar utilities, Objective-See security suite,
+# Mac-specific input/clipboard tools) — no meaningful Linux equivalent, so no
+# Linux block here.
+- name: Install utility and security apps (macOS)
+  community.general.homebrew_cask:
+    name:
+      - bitwarden
+      - keka
+      - maccy
+      - linearmouse
+      - hiddenbar
+      - lulu
+      - oversight
+      - knockknock
+      - alfred
+    state: present
+  when: ansible_os_family == "Darwin"
+
+# Linux
+- name: Install Bitwarden via snap (Linux)
+  become: true
+  community.general.snap:
+    name: bitwarden
+    state: present
+  when: ansible_os_family == "Debian"

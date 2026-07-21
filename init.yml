@@ -57,5 +57,6 @@
     - import_tasks: tasks/social.yml
     - import_tasks: tasks/design.yml
     - import_tasks: tasks/dev-tools.yml
+    - import_tasks: tasks/utilities.yml
     - import_tasks: tasks/multimedia.yml
     - import_tasks: tasks/dotfiles.yml

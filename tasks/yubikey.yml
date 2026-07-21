@@ -11,6 +11,8 @@
     name:
       - yubico-piv-tool
       - ykman
+      - libfido2
+      - openssh
     state: present
   when: ansible_os_family == "Darwin"
 
@@ -41,6 +43,13 @@
   become: true
   apt:
     name: yubico-piv-tool
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install libfido2 (Linux)
+  become: true
+  apt:
+    name: libfido2-1
     state: present
   when: ansible_os_family == "Debian"
 
@@ -90,27 +99,27 @@
     state: directory
     mode: '0700'
 
-- name: Configure SSH for GitHub (macOS)
-  copy:
-    dest: "{{ ansible_user_dir }}/.ssh/config"
-    mode: '0600'
-    content: |
-      Host github.com
-        AddKeysToAgent yes
-        UseKeychain yes
-        IdentityFile ~/.ssh/id_ed25519
+- name: Symlink PKCS11 provider library (macOS)
+  file:
+    src: /opt/homebrew/lib/libykcs11.dylib
+    dest: "{{ ansible_user_dir }}/.ssh/pkcs11-provider"
+    state: link
+    force: yes
   when: ansible_os_family == "Darwin"
 
-- name: Configure SSH for GitHub (Linux)
+- name: Symlink PKCS11 provider library (Linux)
+  file:
+    src: /usr/lib/x86_64-linux-gnu/libykcs11.so
+    dest: "{{ ansible_user_dir }}/.ssh/pkcs11-provider"
+    state: link
+    force: yes
+  when: ansible_os_family == "Debian"
+
+- name: Deploy SSH config (vaulted)
   copy:
+    src: ssh_config
     dest: "{{ ansible_user_dir }}/.ssh/config"
     mode: '0600'
-    content: |
-      Host github.com
-        AddKeysToAgent yes
-        IdentityFile ~/.ssh/id_ed25519
-        PKCS11Provider /usr/lib/x86_64-linux-gnu/libykcs11.so
-  when: ansible_os_family == "Debian"
 
 # ─── Post-install notes ───────────────────────────────────────────────────────
 

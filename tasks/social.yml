@@ -5,6 +5,7 @@
       - discord
       - whatsapp
       - signal
+      - slack
     state: present
   when: ansible_os_family == "Darwin"
 
@@ -37,5 +38,13 @@
   become: true
   apt:
     name: signal-desktop
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Slack via snap (Linux)
+  become: true
+  community.general.snap:
+    name: slack
+    classic: yes
     state: present
   when: ansible_os_family == "Debian"

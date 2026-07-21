@@ -3,8 +3,11 @@
   community.general.homebrew_cask:
     name:
       - visual-studio-code
-      - insomnia
+      - yaak
       - google-chrome
+      - docker
+      - vmware-fusion
+      - lm-studio
     state: present
   when: ansible_os_family == "Darwin"
 
@@ -26,12 +29,6 @@
     state: present
   when: ansible_os_family == "Debian"
 
-- name: Install Insomnia via snap (Linux)
-  become: true
-  community.general.snap:
-    name: insomnia
-    state: present
-  when: ansible_os_family == "Debian"
 
 - name: Install Google Chrome (Linux)
   become: true
@@ -41,3 +38,34 @@
   args:
     creates: /usr/bin/google-chrome
   when: ansible_os_family == "Debian"
+
+- name: Install Docker (Linux)
+  become: true
+  apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Enable docker service (Linux)
+  become: true
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+  when: ansible_os_family == "Debian"
+
+- name: Add user to docker group (Linux)
+  become: true
+  user:
+    name: "{{ ansible_env.USER }}"
+    groups: docker
+    append: yes
+  when: ansible_os_family == "Debian"
+
+# Cross-platform
+- name: Install Claude Code CLI
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    creates: "{{ ansible_user_dir }}/.local/bin/claude"
