@@ -1,0 +1,68 @@
+# VPN, Proton apps, and personal cloud sync (personal)
+
+- name: VPN and cloud apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: personal, cask: protonvpn }          # Linux: apt repo below
+      - { profile: personal, cask: proton-mail-bridge } # Linux: .deb below
+      - { profile: personal, cask: proton-drive }
+      - { profile: personal, cask: synology-drive }     # Linux: .deb below
+      # The WireGuard GUI for macOS is only in the Mac App Store. These are the CLI tools.
+      - { profile: personal, brew: wireguard-tools, apt: wireguard }
+      # WireGuard GUI: Mac App Store only. The WireGuard project publishes no other
+      # macOS app. Homebrew GUI alternative: the `passepartout` cask.
+      - { profile: personal, name: wireguard, mas: 1451685025, app: WireGuard.app }
+      - { profile: personal, cask: proton-mail }
+      - { profile: personal, cask: proton-pass }
+      - { profile: personal, cask: syncthing-app, apt: syncthing }
+      - { profile: personal, cask: google-drive }
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Add ProtonVPN apt repository (Linux)
+  become: true
+  ansible.builtin.shell: |
+    set -euo pipefail
+    wget -qO /tmp/protonvpn-release.deb https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.10_all.deb
+    apt-get install -y /tmp/protonvpn-release.deb
+    apt-get update
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/sources.list.d/protonvpn-stable.list
+  ignore_errors: true
+  when: is_linux and 'protonvpn' in _selected_ids
+
+- name: Install ProtonVPN (Linux)
+  become: true
+  ansible.builtin.apt:
+    name: proton-vpn-gnome-desktop
+    state: present
+  ignore_errors: true
+  when: is_linux and 'protonvpn' in _selected_ids
+
+- name: Install Proton Mail Bridge (Linux)
+  become: true
+  ansible.builtin.shell: |
+    set -euo pipefail
+    URL=$(curl -fsSL https://proton.me/download/bridge/version_linux.json \
+      | python3 -c "import sys, json; print([u for u in json.load(sys.stdin)['stable']['Installers'] if u.endswith('.deb')][0])")
+    wget -qO /tmp/protonbridge.deb "$URL"
+    apt-get install -y /tmp/protonbridge.deb
+  args:
+    executable: /bin/bash
+    creates: /usr/bin/protonmail-bridge
+  ignore_errors: true
+  when: is_linux and not is_arm and 'proton-mail-bridge' in _selected_ids
+
+- name: Install Synology Drive (Linux)
+  become: true
+  ansible.builtin.shell: |
+    set -euo pipefail
+    wget -qO /tmp/synology-drive.deb "https://global.synologydownload.com/download/Utility/SynologyDriveClient/4.2.1-20062/Ubuntu/Installer/synology-drive-client-20062.x86_64.deb"
+    apt-get install -y /tmp/synology-drive.deb
+  args:
+    executable: /bin/bash
+    creates: /usr/bin/synology-drive
+  ignore_errors: true
+  when: is_linux and not is_arm and 'synology-drive' in _selected_ids

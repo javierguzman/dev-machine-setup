@@ -1,71 +1,175 @@
-# macOS
-- name: Install dev tools (macOS)
-  community.general.homebrew_cask:
-    name:
-      - visual-studio-code
-      - yaak
-      - google-chrome
-      - docker
-      - vmware-fusion
-      - lm-studio
-    state: present
-  when: ansible_os_family == "Darwin"
+# Developer apps and the container runtime (minimal, except LM Studio)
 
-# Linux
-- name: Add VSCode apt repository (Linux)
-  become: true
-  shell: |
-    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft.gpg
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
-    apt update
+# ─── Existing container runtime (macOS) ───────────────────────────────────────
+# Example: this laptop has Docker Desktop, and local.yml sets colima. With
+# container_runtime_keep_existing, the playbook keeps Docker Desktop, installs
+# no Colima, and does not change ~/.docker/config.json.
+
+- name: Find existing container runtimes (macOS)
+  ansible.builtin.shell: |
+    found=""
+    for d in /Applications "$HOME/Applications"; do
+      [ -d "$d/Docker.app" ] && found="$found docker-desktop"
+      [ -d "$d/OrbStack.app" ] && found="$found orbstack"
+      [ -d "$d/Rancher Desktop.app" ] && found="$found rancher"
+      [ -d "$d/Podman Desktop.app" ] && found="$found podman"
+    done
+    command -v colima >/dev/null && found="$found colima"
+    command -v podman >/dev/null && found="$found podman"
+    echo $found
   args:
-    creates: /etc/apt/sources.list.d/vscode.list
-  when: ansible_os_family == "Debian"
+    executable: /bin/bash
+  environment: "{{ brew_environment }}"
+  register: _runtimes_found
+  changed_when: false
+  check_mode: false
+  when: is_macos
 
-- name: Install VSCode (Linux)
+- name: Keep the existing container runtime (macOS)
+  ansible.builtin.set_fact:
+    effective_container_runtime: "{{ 'none' if _keep else container_runtime }}"
+    install_external: "{{ install_external + ([_msg] if _keep else []) }}"
+  vars:
+    _found: "{{ _runtimes_found.stdout | default('') | split | unique | list }}"
+    _keep: >-
+      {{ is_macos and (container_runtime_keep_existing | bool) and container_runtime != 'none'
+         and (_found | length > 0) and container_runtime not in _found }}
+    _msg: >-
+      container runtime: found {{ _found | join(', ') }}, so the playbook did not install
+      {{ container_runtime }} (set container_runtime_keep_existing=false to change this)
+
+- name: Developer apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: minimal, cask: visual-studio-code }   # Linux: apt repo below
+      - { profile: minimal, cask: jetbrains-toolbox }    # Linux: tarball below
+      - { profile: minimal, cask: yaak }                 # API client
+      - { profile: minimal, cask: beyond-compare }       # Git diff/merge tool (tasks/git.yml); paid license
+      - { profile: minimal, cask: pgadmin4 }             # PostgreSQL GUI
+      - { profile: personal, cask: android-studio, snap: android-studio, snap_classic: true }
+      - { profile: work, cask: lm-studio }               # local LLMs
+      # vmware-fusion: removed. Broadcom took the cask down; download it from the Broadcom portal.
+
+      # Container runtime on macOS: set `container_runtime` (vars/main.yml).
+      - { profile: minimal, runtime: docker-desktop, cask: docker-desktop }
+      - { profile: minimal, runtime: orbstack, cask: orbstack }
+      - { profile: minimal, runtime: rancher, cask: rancher }
+      - { profile: minimal, runtime: colima, brew: colima }
+      - { profile: minimal, runtime: colima, brew: docker }           # Docker CLI only
+      - { profile: minimal, runtime: colima, brew: docker-compose }
+      - { profile: minimal, runtime: colima, brew: docker-buildx }
+      - { profile: minimal, runtime: podman, brew: podman }
+      - { profile: minimal, runtime: podman, cask: podman-desktop }
+      # Linux: Docker Engine (free, no Desktop needed)
+      - { profile: minimal, name: docker, apt: [docker.io, docker-compose-v2] }
+
+      # Kubernetes clients (independent of the container runtime)
+      - { profile: minimal, brew: kubernetes-cli, name: kubectl, snap: kubectl, snap_classic: true }
+      - { profile: minimal, brew: helm, snap: helm, snap_classic: true }
+
+# ─── Colima (macOS) ───────────────────────────────────────────────────────────
+
+# The Homebrew docker-compose and docker-buildx formulae install CLI plugins
+# into a folder that the docker CLI does not search by default.
+- name: Register Docker CLI plugins for Colima (macOS)
+  when: is_macos and 'colima' in _selected_ids
+  block:
+    - name: Read ~/.docker/config.json
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['user_dir'] }}/.docker/config.json"
+      register: _docker_config
+      failed_when: false
+
+    - name: Write ~/.docker/config.json
+      ansible.builtin.copy:
+        dest: "{{ ansible_facts['user_dir'] }}/.docker/config.json"
+        content: "{{ _current | combine({'cliPluginsExtraDirs': _dirs}) | to_nice_json }}\n"
+        mode: "0600"
+      vars:
+        _current: "{{ (_docker_config.content | b64decode | from_json) if _docker_config.content is defined else {} }}"
+        _dirs: "{{ (_current.cliPluginsExtraDirs | default([]) + [brew_prefix ~ '/lib/docker/cli-plugins']) | unique }}"
+
+- name: Start Colima at login (macOS)
+  ansible.builtin.command: "{{ brew_bin }} services start colima"
+  environment: "{{ brew_environment }}"
+  register: _colima_service
+  changed_when: "'Successfully started' in _colima_service.stdout"
+  ignore_errors: true
+  when: is_macos and 'colima' in _selected_ids
+
+# ─── Claude Code (cross-platform) ─────────────────────────────────────────────
+
+- name: Check for Claude Code
+  ansible.builtin.shell: command -v claude
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "{{ ansible_facts['user_dir'] }}/.local/bin:{{ brew_environment.PATH }}"
+  register: _claude_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install Claude Code
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+  when: _claude_check.rc != 0 and 'claude' not in skip_app_list
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Add VS Code apt repository (Linux)
   become: true
-  apt:
+  ansible.builtin.shell: |
+    set -euo pipefail
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft.gpg
+    echo "deb [arch={{ deb_arch }} signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
+    apt-get update
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/sources.list.d/vscode.list
+  ignore_errors: true
+  when: is_linux and 'visual-studio-code' in _selected_ids
+
+- name: Install VS Code (Linux)
+  become: true
+  ansible.builtin.apt:
     name: code
     state: present
-  when: ansible_os_family == "Debian"
+  ignore_errors: true
+  when: is_linux and 'visual-studio-code' in _selected_ids
 
-
-- name: Install Google Chrome (Linux)
+- name: Enable Docker service (Linux)
   become: true
-  shell: |
-    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb
-    apt install -y /tmp/chrome.deb
-  args:
-    creates: /usr/bin/google-chrome
-  when: ansible_os_family == "Debian"
-
-- name: Install Docker (Linux)
-  become: true
-  apt:
-    name:
-      - docker.io
-      - docker-compose-v2
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Enable docker service (Linux)
-  become: true
-  systemd:
+  ansible.builtin.systemd_service:
     name: docker
-    enabled: yes
+    enabled: true
     state: started
-  when: ansible_os_family == "Debian"
+  ignore_errors: true
+  when: is_linux and 'docker' in _selected_ids
 
 - name: Add user to docker group (Linux)
   become: true
-  user:
-    name: "{{ ansible_env.USER }}"
+  ansible.builtin.user:
+    name: "{{ ansible_facts['user_id'] }}"
     groups: docker
-    append: yes
-  when: ansible_os_family == "Debian"
+    append: true
+  ignore_errors: true
+  when: is_linux and 'docker' in _selected_ids
 
-# Cross-platform
-- name: Install Claude Code CLI
-  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
+- name: Install JetBrains Toolbox (Linux)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    URL=$(curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' \
+      | python3 -c "import sys, json; print(json.load(sys.stdin)['TBA'][0]['downloads']['{{ 'linuxARM64' if is_arm else 'linux' }}']['link'])")
+    curl -fsSLo /tmp/jetbrains-toolbox.tar.gz "$URL"
+    mkdir -p ~/.local/opt/jetbrains-toolbox ~/.local/bin
+    tar xzf /tmp/jetbrains-toolbox.tar.gz -C ~/.local/opt/jetbrains-toolbox --strip-components=1
+    ln -sf ~/.local/opt/jetbrains-toolbox/bin/jetbrains-toolbox ~/.local/bin/jetbrains-toolbox
   args:
-    creates: "{{ ansible_user_dir }}/.local/bin/claude"
+    executable: /bin/bash
+    creates: "{{ ansible_facts['user_dir'] }}/.local/bin/jetbrains-toolbox"
+  ignore_errors: true
+  when: is_linux and 'jetbrains-toolbox' in _selected_ids

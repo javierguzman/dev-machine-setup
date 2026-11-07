@@ -1,0 +1,214 @@
+# Shared package installer. Each category file includes this file with a
+# `packages` list. Each entry describes one app for both operating systems:
+#
+#   - profile: minimal | work | personal   # lowest profile that gets the app (required)
+#     brew: neovim                         # Homebrew formula (macOS)
+#     tap: koekeishiya/formulae            # Homebrew tap to add first (macOS, optional)
+#     cask: visual-studio-code             # Homebrew cask (macOS)
+#     app: "OverSight.app"                 # app bundle for the "already installed" check (optional)
+#     mas: 1451685025                      # Mac App Store ID (macOS; needs `app` and an App Store sign-in)
+#     apt: neovim                          # apt package name or list (Linux)
+#     snap: obsidian                       # snap name (Linux)
+#     snap_classic: true                   # snap needs classic confinement (optional)
+#     name: docker                         # extra name for extra_apps/skip_apps (optional)
+#     runtime: colima                      # only when container_runtime matches (optional)
+#
+# An entry's names are its cask, brew (also the part after the last "/"),
+# snap, apt, and name values. `extra_apps` and `skip_apps` match these names.
+#
+# Rules:
+#   - Entries of the active profiles install (see `active_profiles`).
+#   - Entries named in `extra_apps` install in any profile.
+#   - Entries named in `skip_apps` never install.
+#   - After this file, `_selected_ids` holds the names of the selected entries.
+#     Custom tasks in the category file check it, for example
+#     `when: is_linux and 'google-chrome' in _selected_ids`.
+#   - An app that already exists is skipped. A cask app that exists outside
+#     Homebrew (for example, installed by IT) is skipped and listed in the summary.
+#   - A failed install does not stop the run. The summary at the end lists it.
+#
+# All tasks have the `always` tag. Tags on the import of the category file
+# decide if this file runs at all.
+
+- name: Select packages (profile, extra_apps, skip_apps, container_runtime)
+  ansible.builtin.set_fact:
+    _pkgs: "{{ _selection | map(attribute='entry') | list }}"
+    _selected_ids: "{{ _selection | map(attribute='ids') | flatten | unique | list }}"
+  vars:
+    _selection: >-
+      {%- set out = [] -%}
+      {%- for p in packages -%}
+        {%- set ids = [p.cask | default(''), p.brew | default(''), (p.brew | default('')).split('/') | last,
+                       p.snap | default(''), p.name | default('')] + ([p.apt | default([])] | flatten) -%}
+        {%- set ids = ids | select | unique | list -%}
+        {%- set by_profile = p.profile in active_profiles -%}
+        {%- set by_extra = ids | intersect(extra_app_list) | length > 0 -%}
+        {%- set skipped = ids | intersect(skip_app_list) | length > 0 -%}
+        {%- set runtime_ok = p.runtime is not defined
+                             or p.runtime == (effective_container_runtime | default(container_runtime)) -%}
+        {%- if (by_profile or by_extra) and runtime_ok and not skipped -%}
+          {%- set _ = out.append({'entry': p, 'ids': ids}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ out }}
+  tags: [always]
+
+# ─── macOS ────────────────────────────────────────────────────────────────────
+
+- name: Add Homebrew taps (macOS)
+  community.general.homebrew_tap:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ _pkgs | selectattr('tap', 'defined') | map(attribute='tap') | unique | list }}"
+  register: _tap_result
+  ignore_errors: true
+  when: is_macos
+  tags: [always]
+
+- name: Install Homebrew formulae (macOS)
+  community.general.homebrew:
+    name: "{{ item.brew }}"
+    state: present
+    update_homebrew: false
+  loop: "{{ _pkgs | selectattr('brew', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.brew }}"
+  register: _brew_result
+  ignore_errors: true
+  environment: "{{ brew_environment }}"
+  when: is_macos
+  tags: [always]
+
+- name: Check which casks already exist (macOS)
+  ansible.builtin.command:
+    argv: "{{ [ansible_playbook_python, playbook_dir ~ '/scripts/cask_status.py',
+               '--brew', brew_bin, '--appdir', cask_appdir] + _cask_args }}"
+  vars:
+    # "token" or "token=App Name.app" when the entry sets `app`.
+    _cask_args: >-
+      {%- set out = [] -%}
+      {%- for p in _pkgs if p.cask is defined -%}
+        {%- set _ = out.append(p.cask ~ (('=' ~ p.app) if p.app is defined else '')) -%}
+      {%- endfor -%}
+      {{ out }}
+  register: _cask_check
+  changed_when: false
+  check_mode: false   # read-only, so it also runs with --check
+  when: is_macos and (_pkgs | selectattr('cask', 'defined') | list | length > 0)
+  tags: [always]
+
+- name: Parse cask status (macOS)
+  ansible.builtin.set_fact:
+    _cask_status: "{{ (_cask_check.stdout | from_json) if (_cask_check.stdout | default('')) else {} }}"
+  tags: [always]
+
+- name: Install Homebrew casks (macOS)
+  community.general.homebrew_cask:
+    name: "{{ item.cask }}"
+    state: present
+    update_homebrew: false
+    sudo_password: "{{ ansible_become_password | default(omit, true) }}"
+    install_options: "{{ ['appdir=' ~ cask_appdir] if cask_appdir else omit }}"
+  loop: "{{ _pkgs | selectattr('cask', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.cask }} ({{ _cask_status[item.cask].status | default('?') }})"
+  register: _cask_result
+  ignore_errors: true
+  environment: "{{ brew_environment }}"
+  when:
+    - is_macos
+    - _cask_status[item.cask].status | default('absent') == 'absent'
+  tags: [always]
+
+# Mac App Store apps. `mas get` installs free apps and apps that the Apple
+# account already has. mas needs root for installs, so the task uses sudo.
+# The app check runs first without sudo, so an existing app needs no password.
+- name: Check Mac App Store apps (macOS)
+  ansible.builtin.stat:
+    path: "/Applications/{{ item.app }}"
+  loop: "{{ _pkgs | selectattr('mas', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.app }}"
+  register: _mas_check
+  when: is_macos
+  tags: [always]
+
+- name: Install Mac App Store apps (macOS)
+  become: true
+  ansible.builtin.command: "{{ brew_prefix }}/bin/mas get {{ item.item.mas }}"
+  loop: "{{ _mas_check.results | default([]) | rejectattr('skipped', 'defined') | rejectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.app }} ({{ item.item.mas }})"
+  register: _mas_result
+  ignore_errors: true
+  when: is_macos
+  tags: [always]
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Install apt packages (Linux)
+  become: true
+  ansible.builtin.apt:
+    name: "{{ item.apt }}"
+    state: present
+  loop: "{{ _pkgs | selectattr('apt', 'defined') | list }}"
+  loop_control:
+    label: "{{ [item.apt] | flatten | join(', ') }}"
+  register: _apt_result
+  ignore_errors: true
+  when: is_linux
+  tags: [always]
+
+- name: Install snap packages (Linux)
+  become: true
+  community.general.snap:
+    name: "{{ item.snap }}"
+    classic: "{{ item.snap_classic | default(false) }}"
+    state: present
+  loop: "{{ _pkgs | selectattr('snap', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.snap }}"
+  register: _snap_result
+  ignore_errors: true
+  when: is_linux
+  tags: [always]
+
+# ─── Report ───────────────────────────────────────────────────────────────────
+
+- name: Record failed and skipped packages
+  ansible.builtin.set_fact:
+    install_failures: "{{ install_failures + _failed_now + _unavailable_now }}"
+    install_external: "{{ install_external + _external_now }}"
+    # App Store apps that mas could not install: the summary lists them as manual installs.
+    install_appstore: >-
+      {{ install_appstore | default([]) + (_mas_result.results | default([])
+         | selectattr('failed', 'defined') | selectattr('failed')
+         | map(attribute='item.item') | list) }}
+  vars:
+    _all_results: >-
+      {{ (_tap_result.results | default([]))
+         + (_brew_result.results | default([]))
+         + (_cask_result.results | default([]))
+         + (_apt_result.results | default([]))
+         + (_snap_result.results | default([])) }}
+    _failed_now: >-
+      {%- set out = [] -%}
+      {%- for r in _all_results if r.failed | default(false) -%}
+        {%- set i = r.item.item if (r.item is mapping and r.item.item is defined) else r.item -%}
+        {%- set name = i if i is string else (i.cask | default(i.brew) | default(i.app) | default(i.snap) | default([i.apt | default('?')] | flatten | join(', '))) -%}
+        {%- set _ = out.append(name ~ ': ' ~ (r.msg | default('failed') | string | truncate(200))) -%}
+      {%- endfor -%}
+      {{ out }}
+    _unavailable_now: >-
+      {%- set out = [] -%}
+      {%- for name, s in _cask_status.items() if s.status == 'unavailable' -%}
+        {%- set _ = out.append(name ~ ': ' ~ s.detail) -%}
+      {%- endfor -%}
+      {{ out }}
+    _external_now: >-
+      {%- set out = [] -%}
+      {%- for name, s in _cask_status.items() if s.status == 'external' -%}
+        {%- set _ = out.append(name ~ ': ' ~ s.detail) -%}
+      {%- endfor -%}
+      {{ out }}
+  tags: [always]

@@ -1,0 +1,42 @@
+# macOS settings from files/macos-settings.json (all profiles, macOS only)
+# The file comes from `ansible-playbook export.yml --tags macos` on your main Mac.
+# A work laptop gets the same settings without your Apple ID. Settings that the
+# company manages (MDM profiles) win over these values.
+
+- name: Check for the macOS settings file
+  ansible.builtin.stat:
+    path: "{{ macos_settings_file }}"
+  register: _macos_settings_file
+  when: is_macos and macos_settings_apply | bool
+
+- name: Apply macOS settings
+  ansible.builtin.command:
+    argv: "{{ [ansible_playbook_python, playbook_dir ~ '/scripts/macos_settings.py', 'apply', '--file', macos_settings_file]
+              + (['--check'] if ansible_check_mode else []) }}"
+  register: _macos_settings
+  changed_when: "'CHANGED' in _macos_settings.stdout"
+  check_mode: false   # the script has its own --check mode
+  ignore_errors: true
+  when: is_macos and macos_settings_apply | bool and _macos_settings_file.stat.exists | default(false)
+
+- name: Show changed macOS settings
+  ansible.builtin.debug:
+    msg: "{{ _macos_settings.stdout_lines | select('match', '^CHANGED') | list }}"
+  when: _macos_settings is changed
+
+# Dock, Finder, and the menu bar cache their settings; a restart loads them.
+# activateSettings loads keyboard shortcut changes without a logout.
+- name: Restart processes that cache the changed settings
+  ansible.builtin.shell: |
+    for p in {{ _restart | join(' ') }}; do
+      if [ "$p" = activateSettings ]; then
+        /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u || true
+      else
+        killall "$p" 2>/dev/null || true
+      fi
+    done
+  args:
+    executable: /bin/bash
+  vars:
+    _restart: "{{ _macos_settings.stdout_lines | select('match', '^RESTART ') | map('regex_replace', '^RESTART ', '') | list }}"
+  when: _macos_settings is changed and not ansible_check_mode and _restart | length > 0

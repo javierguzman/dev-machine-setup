@@ -1,135 +1,109 @@
-# ─── macOS ────────────────────────────────────────────────────────────────────
+# YubiKey, GPG, and SSH (minimal: Git commit signing needs it)
 
-- name: Install GPG Suite (macOS)
-  community.general.homebrew_cask:
-    name: gpg-suite
-    state: present
-  when: ansible_os_family == "Darwin"
-
-- name: Install YubiKey tools (macOS)
-  community.general.homebrew:
-    name:
-      - yubico-piv-tool
-      - ykman
-      - libfido2
-      - openssh
-    state: present
-  when: ansible_os_family == "Darwin"
-
-# ─── Linux ────────────────────────────────────────────────────────────────────
-
-- name: Install GPG and smartcard tools (Linux)
-  become: true
-  apt:
-    name:
-      - gnupg2
-      - scdaemon
-      - pcscd
-      - pcsc-tools
-      - libpcsclite-dev
-      - pinentry-curses
-      - pinentry-gtk2
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Install yubikey-manager via pip (Linux)
-  become: true
-  pip:
-    name: yubikey-manager
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Install yubico-piv-tool (Linux)
-  become: true
-  apt:
-    name: yubico-piv-tool
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Install libfido2 (Linux)
-  become: true
-  apt:
-    name: libfido2-1
-    state: present
-  when: ansible_os_family == "Debian"
+- name: YubiKey and GPG packages
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      # macOS. Homebrew gnupg + pinentry-mac replace GPG Suite: GPG Suite has
+      # had no release since 2023, and its .pkg installer needs sudo.
+      - { profile: minimal, brew: gnupg }
+      - { profile: minimal, brew: pinentry-mac }
+      - { profile: minimal, brew: yubico-piv-tool }
+      - { profile: minimal, brew: ykman }
+      - { profile: minimal, brew: libfido2 }
+      - { profile: minimal, brew: openssh }   # the macOS ssh has no FIDO2 support
+      # GUI for the YubiKey (OATH codes, PIV, FIDO). Replaces the discontinued YubiKey Manager app.
+      - { profile: minimal, cask: yubico-authenticator }
+      # Linux
+      - profile: minimal
+        apt:
+          - gnupg
+          - scdaemon
+          - pcscd
+          - pcsc-tools
+          - pinentry-curses
+          - pinentry-gnome3
+          - yubikey-manager
+          - yubico-piv-tool
+          - ykcs11            # provides libykcs11.so
+          - libfido2-1
 
 - name: Enable pcscd service (Linux)
   become: true
-  systemd:
+  ansible.builtin.systemd_service:
     name: pcscd
-    enabled: yes
+    enabled: true
     state: started
-  when: ansible_os_family == "Debian"
+  ignore_errors: true
+  when: is_linux
 
-# ─── GPG config (cross-platform) ──────────────────────────────────────────────
+# ─── GPG config ───────────────────────────────────────────────────────────────
 
-- name: Ensure ~/.gnupg directory exists
-  file:
-    path: "{{ ansible_user_dir }}/.gnupg"
+- name: Ensure ~/.gnupg exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.gnupg"
     state: directory
-    mode: '0700'
+    mode: "0700"
 
-- name: Configure gpg-agent (cross-platform)
-  copy:
-    dest: "{{ ansible_user_dir }}/.gnupg/gpg-agent.conf"
-    mode: '0600'
-    content: |
-      default-cache-ttl 600
-      max-cache-ttl 7200
+- name: Write GPG config files
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['user_dir'] }}/.gnupg/{{ item.file }}"
+    content: "{{ item.content }}"
+    mode: "0600"
+  loop:
+    - file: gpg-agent.conf
+      content: |
+        default-cache-ttl 600
+        max-cache-ttl 7200
+        {% if is_macos %}
+        pinentry-program {{ brew_prefix }}/bin/pinentry-mac
+        {% endif %}
+    - file: gpg.conf
+      content: |
+        auto-key-retrieve
+    - file: dirmngr.conf
+      content: |
+        keyserver hkps://keys.openpgp.org
+  loop_control:
+    label: "{{ item.file }}"
 
-- name: Configure gpg (cross-platform)
-  copy:
-    dest: "{{ ansible_user_dir }}/.gnupg/gpg.conf"
-    mode: '0600'
-    content: |
-      auto-key-retrieve
+# ─── SSH ──────────────────────────────────────────────────────────────────────
 
-- name: Configure dirmngr (cross-platform)
-  copy:
-    dest: "{{ ansible_user_dir }}/.gnupg/dirmngr.conf"
-    mode: '0600'
-    content: |
-      keyserver hkps://keys.openpgp.org
-
-# ─── SSH config ───────────────────────────────────────────────────────────────
-
-- name: Ensure ~/.ssh directory exists
-  file:
-    path: "{{ ansible_user_dir }}/.ssh"
+- name: Ensure ~/.ssh exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.ssh"
     state: directory
-    mode: '0700'
+    mode: "0700"
 
-- name: Symlink PKCS11 provider library (macOS)
-  file:
-    src: /opt/homebrew/lib/libykcs11.dylib
-    dest: "{{ ansible_user_dir }}/.ssh/pkcs11-provider"
+- name: Link the PKCS#11 provider library
+  ansible.builtin.file:
+    src: "{{ (brew_prefix ~ '/lib/libykcs11.dylib') if is_macos else (linux_lib_dir ~ '/libykcs11.so') }}"
+    dest: "{{ ansible_facts['user_dir'] }}/.ssh/pkcs11-provider"
     state: link
-    force: yes
-  when: ansible_os_family == "Darwin"
+    force: true
 
-- name: Symlink PKCS11 provider library (Linux)
-  file:
-    src: /usr/lib/x86_64-linux-gnu/libykcs11.so
-    dest: "{{ ansible_user_dir }}/.ssh/pkcs11-provider"
-    state: link
-    force: yes
-  when: ansible_os_family == "Debian"
-
-- name: Deploy SSH config (vaulted)
-  copy:
-    src: ssh_config
-    dest: "{{ ansible_user_dir }}/.ssh/config"
-    mode: '0600'
-
-# ─── Post-install notes ───────────────────────────────────────────────────────
+- name: Deploy SSH config (vault-encrypted)
+  when: ssh_config_deploy | bool
+  block:
+    - name: Deploy SSH config
+      ansible.builtin.copy:
+        src: ssh_config
+        dest: "{{ ansible_facts['user_dir'] }}/.ssh/config"
+        mode: "0600"
+        backup: true
+  rescue:
+    - name: Record SSH config failure
+      ansible.builtin.set_fact:
+        install_failures: >-
+          {{ install_failures + ['ssh_config: could not decrypt or copy. Run with --ask-vault-pass,
+          or set ssh_config_deploy=false.'] }}
 
 - name: Print YubiKey setup reminder
-  debug:
+  ansible.builtin.debug:
     msg:
-      - "YubiKey setup complete. Manual steps required:"
-      - "1. Insert your YubiKey"
-      - "2. Import your public GPG key: gpg --import your-public-key.asc"
-      - "   Or fetch from keyserver: gpg --recv-keys 34D3A6FB8181BEA7"
-      - "3. Trust the key: gpg --edit-key 34D3A6FB8181BEA7 -> trust -> 5 -> quit"
-      - "4. Verify GPG sees the card: gpg --card-status"
-      - "5. Verify SSH key: ssh-add -L"
+      - "YubiKey manual steps (see README):"
+      - "1. Insert the YubiKey"
+      - "2. gpg --recv-keys {{ git_signing_key }}  (or gpg --import your-public-key.asc)"
+      - "3. gpg --edit-key {{ git_signing_key }} -> trust -> 5 -> quit"
+      - "4. gpg --card-status"
+      - "5. ssh-add -L"

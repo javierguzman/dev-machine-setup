@@ -1,62 +1,204 @@
-- hosts: localhost
-  gather_facts: true
-  pre_tasks:
-    # macOS - Homebrew
-    - name: Ensuring Homebrew is installed (macOS)
-      stat:
-        path: "{{ '/opt/homebrew/bin/brew' if ansible_architecture == 'arm64' else '/usr/local/bin/brew' }}"
-      register: homebrew_check
-      when: ansible_os_family == "Darwin"
+# Usage:
+#   ./run.sh                                   # asks for the settings, writes local.yml, runs this
+#   ansible-playbook init.yml -e profile=work  # direct run
+# Profiles: minimal | work | personal (see vars/main.yml).
+# Do not use -K. The playbook asks for the sudo password itself, because
+# Homebrew needs the password as a variable for .pkg-based casks.
 
-    - name: Install Homebrew if not installed (macOS)
-      become: false
-      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      when: ansible_os_family == "Darwin" and not homebrew_check.stat.exists
+- name: Provision this machine
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars_files:
+    - vars/main.yml
+    - vars/terminal.yml
+    - vars/macos_settings.yml
+    - vars/obsidian.yml
+
+  vars_prompt:
+    - name: ansible_become_password
+      prompt: "sudo password (press Enter to skip sudo tasks)"
+      private: true
+
+  pre_tasks:
+    - name: Check for local.yml
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/local.yml"
+      register: _local_vars
+      tags: [always]
+
+    - name: Load local.yml
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/local.yml"
+      when: _local_vars.stat.exists
+      tags: [always]
+
+    - name: Validate the profile
+      ansible.builtin.assert:
+        that:
+          - profile is defined
+          - profile in profile_order
+        fail_msg: >-
+          Choose a profile: -e profile=minimal|work|personal
+          (or set `profile` in local.yml).
+        quiet: true
+      tags: [always]
+
+    - name: Validate the container runtime
+      ansible.builtin.assert:
+        that: container_runtime in ['docker-desktop', 'orbstack', 'colima', 'rancher', 'podman', 'none']
+        fail_msg: "container_runtime must be docker-desktop, orbstack, colima, rancher, podman, or none."
+        quiet: true
+      tags: [always]
+
+    - name: Validate the operating system
+      ansible.builtin.assert:
+        that: is_macos or is_linux
+        fail_msg: "This playbook supports macOS and Debian/Ubuntu only."
+        quiet: true
+      tags: [always]
+
+    - name: Start the install report
+      ansible.builtin.set_fact:
+        install_failures: []
+        install_external: []
+        install_appstore: []
+        install_notes: []
+      tags: [always]
+
+    - name: Check the sudo password
+      become: true
+      ansible.builtin.command: /usr/bin/true
+      changed_when: false
+      register: _sudo_check
+      ignore_errors: true
+      when: ansible_become_password | default('') | length > 0
+      tags: [always]
+
+    - name: Warn when sudo is not available
+      ansible.builtin.debug:
+        msg: >-
+          sudo is not available. Tasks that need root fail, and the summary lists them.
+          On macOS, casks with a .pkg installer need sudo.
+      when: (ansible_become_password | default('') | length == 0) or (_sudo_check is failed)
+      tags: [always]
+
+    # macOS: Homebrew. install.sh installs it; the playbook does not, because
+    # the Homebrew installer is interactive.
+    - name: Check Homebrew (macOS)
+      ansible.builtin.stat:
+        path: "{{ brew_bin }}"
+      register: _brew_check
+      when: is_macos
+      tags: [always]
+
+    - name: Require Homebrew (macOS)
+      ansible.builtin.assert:
+        that: _brew_check.stat.exists
+        fail_msg: "Homebrew is missing. Run ./install.sh first."
+        quiet: true
+      when: is_macos
+      tags: [always]
 
     - name: Update Homebrew (macOS)
       community.general.homebrew:
         update_homebrew: true
-      when: ansible_os_family == "Darwin" and homebrew_check.stat.exists
+      environment: "{{ brew_environment }}"
+      ignore_errors: true
+      when: is_macos
+      tags: [always]
 
-    # Linux - apt
+    # Linux: apt
     - name: Update apt cache (Linux)
       become: true
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
         cache_valid_time: 3600
-      when: ansible_os_family == "Debian"
+      when: is_linux
+      tags: [always]
 
     - name: Install base dependencies (Linux)
       become: true
-      apt:
+      ansible.builtin.apt:
         name:
           - curl
           - wget
           - git
+          - unzip
+          - fontconfig
           - build-essential
           - ca-certificates
           - gnupg
           - apt-transport-https
-          - software-properties-common
+          - snapd
         state: present
-      when: ansible_os_family == "Debian"
+      when: is_linux
+      tags: [always]
 
-  tags:
-    - install
-    - core
+    - name: Show the active profile
+      ansible.builtin.debug:
+        msg:
+          profile: "{{ profile }} ({{ active_profiles | join(' + ') }})"
+          extra_apps: "{{ extra_app_list }}"
+          skip_apps: "{{ skip_app_list }}"
+          container_runtime: "{{ container_runtime }}"
+      tags: [always]
 
   tasks:
-    - import_tasks: tasks/yubikey.yml
-    - import_tasks: tasks/git-setup.yml
-    - import_tasks: tasks/core-setup.yml
-    - import_tasks: tasks/zsh.yml
-    - import_tasks: tasks/prodev.yml
-    - import_tasks: tasks/node.yml
-    - import_tasks: tasks/python.yml
-    - import_tasks: tasks/office.yml
-    - import_tasks: tasks/social.yml
-    - import_tasks: tasks/design.yml
-    - import_tasks: tasks/dev-tools.yml
-    - import_tasks: tasks/utilities.yml
-    - import_tasks: tasks/multimedia.yml
-    - import_tasks: tasks/dotfiles.yml
+    # minimal
+    - { import_tasks: tasks/yubikey.yml, tags: [yubikey] }
+    - { import_tasks: tasks/git.yml, tags: [git] }
+    - { import_tasks: tasks/core.yml, tags: [core] }
+    - { import_tasks: tasks/zsh.yml, tags: [zsh] }
+    - { import_tasks: tasks/terminal.yml, tags: [terminal] }
+    - { import_tasks: tasks/node.yml, tags: [node] }
+    - { import_tasks: tasks/python.yml, tags: [python] }
+    - { import_tasks: tasks/dev-tools.yml, tags: [dev-tools] }
+    - { import_tasks: tasks/window-manager.yml, tags: [window-manager] }
+    # work and personal (each file filters its entries by profile)
+    - { import_tasks: tasks/browsers.yml, tags: [browsers] }
+    - { import_tasks: tasks/productivity.yml, tags: [productivity] }
+    - { import_tasks: tasks/communication.yml, tags: [communication] }
+    - { import_tasks: tasks/design.yml, tags: [design] }
+    - { import_tasks: tasks/utilities.yml, tags: [utilities] }
+    - { import_tasks: tasks/vpn-cloud.yml, tags: [vpn-cloud] }
+    - { import_tasks: tasks/multimedia.yml, tags: [multimedia] }
+    - { import_tasks: tasks/own-apps.yml, tags: [own-apps] }
+    - { import_tasks: tasks/macos-settings.yml, tags: [macos-settings] }
+    # last: dotfiles replace shell config files that the steps above may create
+    - { import_tasks: tasks/dotfiles.yml, tags: [dotfiles] }
+
+  post_tasks:
+    - name: Check which manual apps are missing (macOS)
+      ansible.builtin.stat:
+        path: "/Applications/{{ item.app }}"
+      loop: "{{ manual_apps | selectattr('profile', 'in', active_profiles) | rejectattr('name', 'in', skip_app_list) | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: _manual_check
+      when: is_macos
+      tags: [always]
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          profile: "{{ profile }}"
+          failed: "{{ install_failures if install_failures else 'none' }}"
+          skipped_already_installed_outside_homebrew: "{{ install_external if install_external else 'none' }}"
+          install_manually: "{{ _manual if _manual else 'none' }}"
+      vars:
+        _manual: "{{ _appstore_lines + _missing_lines + install_notes }}"
+        _appstore_lines: >-
+          {%- set out = [] -%}
+          {%- for a in install_appstore -%}
+            {%- set _ = out.append(a.app | regex_replace('\\.app$', '') ~ ': App Store app (ID ' ~ a.mas ~ '). Sign in to the App Store, then install it there.') -%}
+          {%- endfor -%}
+          {{ out }}
+        _missing_lines: >-
+          {%- set out = [] -%}
+          {%- for r in _manual_check.results | default([]) if r.stat is defined and not r.stat.exists -%}
+            {%- set _ = out.append(r.item.name ~ ': ' ~ r.item.how) -%}
+          {%- endfor -%}
+          {{ out }}
+      tags: [always]

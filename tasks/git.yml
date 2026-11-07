@@ -1,0 +1,87 @@
+# Git global configuration (minimal)
+# The identity comes from local.yml (./run.sh asks). An empty value leaves the
+# current user.name / user.email unchanged.
+
+- name: Configure Git identity and settings
+  community.general.git_config:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop: >-
+    {{ ({'user.name': git_user_name, 'user.email': git_user_email}
+        | dict2items | rejectattr('value', 'equalto', '') | list)
+       + (git_extra_config | dict2items) }}
+  loop_control:
+    label: "{{ item.key }}"
+
+# GPG commit signing (the GPG key lives on the YubiKey)
+- name: Configure GPG commit signing
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: user.signingkey, value: "{{ git_signing_key }}" }
+    - { name: commit.gpgsign, value: "true" }
+    - { name: gpg.program, value: gpg }
+  loop_control:
+    label: "{{ item.name }}"
+  when: git_gpg_sign | bool
+
+- name: Disable GPG commit signing
+  community.general.git_config:
+    name: commit.gpgsign
+    value: "false"
+    scope: global
+  when: not (git_gpg_sign | bool)
+
+# ─── GitHub over SSH ──────────────────────────────────────────────────────────
+# https://github.com/... remotes push to git@github.com:... (SSH key on the YubiKey).
+
+- name: Push to GitHub over SSH
+  community.general.git_config:
+    name: url.git@github.com:.pushInsteadOf
+    value: "https://github.com/"
+    scope: global
+    state: "{{ 'present' if git_github_push_over_ssh | bool else 'absent' }}"
+
+# ─── Global ignore file ───────────────────────────────────────────────────────
+
+- name: Create ~/.config/git
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.config/git"
+    state: directory
+    mode: "0755"
+
+- name: Add lines to the global ignore file
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_facts['user_dir'] }}/.config/git/ignore"
+    line: "{{ item }}"
+    create: true
+    mode: "0644"
+  loop: "{{ git_global_ignore }}"
+
+# ─── Beyond Compare (only when installed) ─────────────────────────────────────
+
+- name: Check for Beyond Compare (macOS)
+  ansible.builtin.stat:
+    path: /Applications/Beyond Compare.app
+  register: _bcomp
+  when: is_macos and git_beyond_compare | bool
+
+- name: Use Beyond Compare as diff and merge tool (macOS)
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: diff.tool, value: bc }
+    - { name: difftool.bc.cmd, value: '"/Applications/Beyond Compare.app/Contents/MacOS/bcomp" "$LOCAL" "$REMOTE"' }
+    - { name: difftool.prompt, value: "false" }
+    - { name: merge.tool, value: bc }
+    - { name: mergetool.bc.cmd, value: '"/Applications/Beyond Compare.app/Contents/MacOS/bcomp" "$LOCAL" "$REMOTE" "$BASE" "$MERGED"' }
+    - { name: mergetool.bc.trustExitCode, value: "true" }
+    - { name: mergetool.keepBackup, value: "false" }
+  loop_control:
+    label: "{{ item.name }}"
+  when: is_macos and git_beyond_compare | bool and _bcomp.stat.exists | default(false)

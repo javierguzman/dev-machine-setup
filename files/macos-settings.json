@@ -1,0 +1,403 @@
+{
+  "NSGlobalDomain": {
+    "AppleAccentColor": 1,
+    "AppleHighlightColor": "1.000000 0.874510 0.701961 Orange",
+    "AppleInterfaceStyle": "Dark",
+    "AppleKeyboardUIMode": 0,
+    "AppleLanguages": [
+      "en-ES",
+      "es-ES"
+    ],
+    "AppleLocale": "en_ES",
+    "ApplePressAndHoldEnabled": "0",
+    "AppleShowAllExtensions": true,
+    "NSAutomaticCapitalizationEnabled": true,
+    "NSAutomaticPeriodSubstitutionEnabled": true,
+    "NSWindowShouldDragOnGesture": true,
+    "_HIHideMenuBar": false,
+    "com.apple.mouse.scaling": 1.5,
+    "com.apple.swipescrolldirection": true,
+    "com.apple.trackpad.scaling": 2.5
+  },
+  "com.apple.ActivityMonitor": {
+    "ShowCategory": 102
+  },
+  "com.apple.AppleMultitouchTrackpad": {
+    "Clicking": true,
+    "FirstClickThreshold": 1,
+    "TrackpadCornerSecondaryClick": 0,
+    "TrackpadRightClick": true,
+    "TrackpadThreeFingerDrag": true
+  },
+  "com.apple.HIToolbox": {
+    "AppleEnabledInputSources": [
+      {
+        "InputSourceKind": "Keyboard Layout",
+        "KeyboardLayout ID": 87,
+        "KeyboardLayout Name": "Spanish - ISO"
+      },
+      {
+        "Bundle ID": "com.apple.CharacterPaletteIM",
+        "InputSourceKind": "Non Keyboard Input Method"
+      },
+      {
+        "Bundle ID": "com.apple.PressAndHold",
+        "InputSourceKind": "Non Keyboard Input Method"
+      }
+    ],
+    "AppleFnUsageType": 0,
+    "AppleSelectedInputSources": [
+      {
+        "Bundle ID": "com.apple.PressAndHold",
+        "InputSourceKind": "Non Keyboard Input Method"
+      },
+      {
+        "InputSourceKind": "Keyboard Layout",
+        "KeyboardLayout ID": 87,
+        "KeyboardLayout Name": "Spanish - ISO"
+      }
+    ]
+  },
+  "com.apple.WindowManager": {
+    "EnableTiledWindowMargins": false,
+    "GloballyEnabled": false,
+    "HideDesktop": true,
+    "StandardHideWidgets": false
+  },
+  "com.apple.dock": {
+    "autohide": true,
+    "autohide-delay": 0.0,
+    "autohide-time-modifier": 0,
+    "mru-spaces": false,
+    "show-recents": false,
+    "tilesize": 78.0,
+    "wvous-bl-corner": 3,
+    "wvous-br-corner": 4,
+    "wvous-tl-corner": 2,
+    "wvous-tr-corner": 1
+  },
+  "com.apple.driver.AppleBluetoothMultitouch.trackpad": {
+    "Clicking": true,
+    "TrackpadRightClick": true,
+    "TrackpadThreeFingerDrag": true
+  },
+  "com.apple.finder": {
+    "FXPreferredViewStyle": "icnv",
+    "NewWindowTarget": "PfHm",
+    "NewWindowTargetPath": "file://~/",
+    "ShowExternalHardDrivesOnDesktop": true,
+    "ShowHardDrivesOnDesktop": false,
+    "ShowPathbar": true,
+    "ShowRemovableMediaOnDesktop": true,
+    "ShowStatusBar": false
+  },
+  "com.apple.menuextra.clock": {
+    "ShowDate": 0,
+    "ShowDayOfWeek": true
+  },
+  "com.apple.screencapture": {
+    "location": "~/Desktop"
+  },
+  "com.apple.spaces": {
+    "spans-displays": true
+  },
+  "com.apple.symbolichotkeys": {
+    "AppleSymbolicHotKeys": {
+      "118": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            18,
+            262144
+          ],
+          "type": "standard"
+        }
+      },
+      "119": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            19,
+            262144
+          ],
+          "type": "standard"
+        }
+      },
+      "120": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            20,
+            262144
+          ],
+          "type": "standard"
+        }
+      },
+      "121": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            21,
+            262144
+          ],
+          "type": "standard"
+        }
+      },
+      "122": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            23,
+            262144
+          ],
+          "type": "standard"
+        }
+      },
+      "15": {
+        "enabled": false
+      },
+      "16": {
+        "enabled": false
+      },
+      "164": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            65535,
+            65535,
+            0
+          ],
+          "type": "standard"
+        }
+      },
+      "17": {
+        "enabled": false
+      },
+      "176": {
+        "enabled": false,
+        "value": {
+          "type": "standard"
+        }
+      },
+      "18": {
+        "enabled": false
+      },
+      "19": {
+        "enabled": false
+      },
+      "20": {
+        "enabled": false
+      },
+      "21": {
+        "enabled": false
+      },
+      "22": {
+        "enabled": false
+      },
+      "23": {
+        "enabled": false
+      },
+      "233": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            109,
+            46,
+            1048576
+          ],
+          "type": "standard"
+        }
+      },
+      "235": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            102,
+            3,
+            524288
+          ],
+          "type": "standard"
+        }
+      },
+      "237": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            102,
+            3,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "238": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            99,
+            8,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "239": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            114,
+            15,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "24": {
+        "enabled": false
+      },
+      "25": {
+        "enabled": false
+      },
+      "26": {
+        "enabled": false
+      },
+      "32": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            126,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "33": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            65535,
+            125,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "34": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            126,
+            8781824
+          ],
+          "type": "standard"
+        }
+      },
+      "60": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            32,
+            49,
+            262144
+          ],
+          "type": "standard"
+        }
+      },
+      "61": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            32,
+            49,
+            786432
+          ],
+          "type": "standard"
+        }
+      },
+      "64": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            32,
+            49,
+            1048576
+          ],
+          "type": "standard"
+        }
+      },
+      "65": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            32,
+            49,
+            1572864
+          ],
+          "type": "standard"
+        }
+      },
+      "79": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            123,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "80": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            123,
+            8781824
+          ],
+          "type": "standard"
+        }
+      },
+      "81": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            124,
+            8650752
+          ],
+          "type": "standard"
+        }
+      },
+      "82": {
+        "enabled": true,
+        "value": {
+          "parameters": [
+            65535,
+            124,
+            8781824
+          ],
+          "type": "standard"
+        }
+      },
+      "98": {
+        "enabled": false,
+        "value": {
+          "parameters": [
+            47,
+            44,
+            1179648
+          ],
+          "type": "standard"
+        }
+      }
+    }
+  }
+}

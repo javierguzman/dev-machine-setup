@@ -1,29 +1,14 @@
-# macOS
-- name: Install Design tools (macOS)
-  community.general.homebrew_cask:
-    name:
-      - darktable
-      - drawio
-      - figma
-      - gimp
-      - affinity-photo
-      - affinity-designer
-    state: present
-  when: ansible_os_family == "Darwin"
+# Design and diagram tools (Figma and draw.io for work, photo editing personal)
 
-# Linux
-- name: Install design tools (Linux)
-  become: true
-  apt:
-    name:
-      - darktable
-      - gimp
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Install draw.io via snap (Linux)
-  become: true
-  community.general.snap:
-    name: drawio
-    state: present
-  when: ansible_os_family == "Debian"
+- name: Design apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: work, cask: figma }
+      - { profile: work, cask: drawio, snap: drawio }
+      - { profile: personal, cask: gimp, apt: gimp }
+      # Affinity Photo 2 and Designer 2 are discontinued. `affinity` is the new single app.
+      - { profile: personal, cask: affinity }
+      # The darktable cask is disabled (it fails the Gatekeeper check).
+      # macOS: download it from https://www.darktable.org/install/
+      - { profile: personal, apt: darktable }

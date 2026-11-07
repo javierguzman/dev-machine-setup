@@ -1,0 +1,11 @@
+# Core command-line tools (minimal)
+- name: Core command-line tools
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: minimal, brew: ripgrep, apt: ripgrep }
+      - { profile: minimal, brew: fzf, apt: fzf }
+      - { profile: minimal, brew: stow, apt: stow }
+      - { profile: minimal, brew: tlrc, apt: tldr }   # the Homebrew `tldr` formula no longer exists
+      - { profile: minimal, brew: jq, apt: jq }
+      - { profile: minimal, brew: mas }   # Mac App Store CLI (for `mas:` entries)

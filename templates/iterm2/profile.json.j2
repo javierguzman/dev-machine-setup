@@ -1,0 +1,61 @@
+{#- iTerm2 Dynamic Profile. Source: dev-machine-setup templates/iterm2/profile.json.j2 + vars/terminal.yml -#}
+{%- macro color(hex) -%}
+{"Red Component": {{ '%.6f' | format((hex[1:3] | int(base=16)) / 255) }}, "Green Component": {{ '%.6f' | format((hex[3:5] | int(base=16)) / 255) }}, "Blue Component": {{ '%.6f' | format((hex[5:7] | int(base=16)) / 255) }}, "Alpha Component": 1, "Color Space": "sRGB"}
+{%- endmacro -%}
+{%- macro colors(theme, suffix) -%}
+      "Background Color{{ suffix }}": {{ color(theme.background) }},
+      "Foreground Color{{ suffix }}": {{ color(theme.foreground) }},
+      "Bold Color{{ suffix }}": {{ color(theme.foreground) }},
+      "Cursor Color{{ suffix }}": {{ color(theme.cursor) }},
+      "Cursor Text Color{{ suffix }}": {{ color(theme.cursor_text) }},
+      "Selection Color{{ suffix }}": {{ color(theme.foreground) }},
+      "Selected Text Color{{ suffix }}": {{ color(theme.background) }},
+{%- for c in theme.palette %}
+      "Ansi {{ loop.index0 }} Color{{ suffix }}": {{ color(c) }},
+{%- endfor %}
+{%- endmacro -%}
+{%- set pair = {} -%}
+{%- for part in terminal_theme.split(',') -%}
+  {%- if ':' in part -%}{%- set _ = pair.update({part.split(':')[0] | trim: part.split(':')[1] | trim}) -%}
+  {%- else -%}{%- set _ = pair.update({'single': part | trim}) -%}{%- endif -%}
+{%- endfor -%}
+{
+  "Profiles": [
+    {
+      "Name": "{{ iterm2_profile_name }}",
+      "Guid": "{{ iterm2_profile_guid }}",
+      "Normal Font": "{{ terminal_font.postscript.regular }} {{ terminal_font.size }}",
+      "Non Ascii Font": "{{ terminal_font.postscript.regular }} {{ terminal_font.size }}",
+      "Use Non-ASCII Font": false,
+      "Use Bold Font": true,
+      "Use Italic Font": true,
+      "ASCII Ligatures": {{ terminal_font.ligatures | lower }},
+      "Non-ASCII Ligatures": {{ terminal_font.ligatures | lower }},
+      "Horizontal Spacing": 1,
+      "Vertical Spacing": 1,
+      "Window Type": 12,
+      "Transparency": {{ '%.2f' | format(1 - terminal_opacity) }},
+      "Blur": false,
+      "Cursor Type": 2,
+      "Blinking Cursor": {{ terminal_cursor_blink | lower }},
+      "Option Key Sends": 2,
+      "Right Option Key Sends": 0,
+      "Use Bright Bold": false,
+      "Use Selected Text Color": true,
+      "Minimum Contrast": 0,
+{%- if 'single' in pair %}
+      "Use Separate Colors for Light and Dark Mode": false,
+{{ colors(terminal_themes[pair.single], '') }}
+{%- else %}
+      "Use Separate Colors for Light and Dark Mode": true,
+{{ colors(terminal_themes[pair.dark], ' (Dark)') }}
+{{ colors(terminal_themes[pair.light], ' (Light)') }}
+{%- endif %}
+      "Keyboard Map": {
+        "0xf702-0x280000": {"Action": 10, "Text": "b"},
+        "0xf703-0x280000": {"Action": 10, "Text": "f"},
+        "0x9-0x80000": {"Action": 11, "Text": "0x1b 0x09"}
+      }
+    }
+  ]
+}

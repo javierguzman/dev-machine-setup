@@ -1,0 +1,93 @@
+# Own apps from your own Git server (personal, macOS)
+# The server comes from own_git_host in local.yml (./run.sh asks). Without it,
+# the summary lists the app under install_manually.
+#
+# Pomodoro: Electron app, built from source (no published release).
+#   - Skipped when Pomodoro.app already exists. To update, delete the app and run again.
+#   - Skipped with a summary line when the GitLab server is not reachable.
+#   - An existing source folder stays as it is (no pull), because it can hold your own work.
+
+- name: Own apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: personal, name: pomodoro }
+
+- name: Install Pomodoro (macOS)
+  when: is_macos and 'pomodoro' in _selected_ids
+  block:
+    - name: Check for Pomodoro.app
+      ansible.builtin.shell: |
+        for d in "{{ cask_appdir | default('', true) }}" /Applications "$HOME/Applications"; do
+          [ -n "$d" ] && [ -d "${d/#\~/$HOME}/Pomodoro.app" ] && { echo "${d/#\~/$HOME}/Pomodoro.app"; exit 0; }
+        done
+        exit 1
+      args:
+        executable: /bin/bash
+      register: _pomodoro_app
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Note the missing Git server
+      ansible.builtin.set_fact:
+        install_notes: "{{ install_notes + ['Pomodoro: set own_git_host (./run.sh asks for it) to build it from your Git server'] }}"
+      when: _pomodoro_app.rc != 0 and own_git_host | length == 0
+
+    - name: Check that the Git server is reachable
+      ansible.builtin.wait_for:
+        host: "{{ own_git_host }}"
+        port: 443
+        timeout: 3
+      register: _own_git_reachable
+      ignore_errors: true
+      check_mode: false   # read-only test, so --check gives the real answer
+      when: _pomodoro_app.rc != 0 and own_git_host | length > 0
+
+    - name: Record unreachable GitLab server
+      ansible.builtin.set_fact:
+        install_failures: "{{ install_failures + ['pomodoro: ' ~ own_git_host ~ ' is not reachable (home network or VPN?)'] }}"
+      when: _pomodoro_app.rc != 0 and own_git_host | length > 0 and _own_git_reachable is failed
+
+    - name: Clone, build, and install Pomodoro
+      when: _pomodoro_app.rc != 0 and own_git_host | length > 0 and _own_git_reachable is not failed
+      block:
+        - name: Clone the Pomodoro repository (SSH, then HTTPS)
+          ansible.builtin.shell: |
+            set -uo pipefail
+            export GIT_TERMINAL_PROMPT=0
+            export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=5"
+            mkdir -p "$(dirname '{{ pomodoro_src_dir }}')"
+            git clone '{{ pomodoro_repo_ssh }}' '{{ pomodoro_src_dir }}' \
+              || git clone '{{ pomodoro_repo_https }}' '{{ pomodoro_src_dir }}'
+          args:
+            executable: /bin/bash
+            creates: "{{ pomodoro_src_dir }}/package.json"
+
+        - name: Build Pomodoro
+          ansible.builtin.shell: |
+            set -euo pipefail
+            . "$HOME/.nvm/nvm.sh"
+            npm ci
+            npm run build
+          args:
+            executable: /bin/bash
+            chdir: "{{ pomodoro_src_dir }}"
+
+        - name: Copy Pomodoro.app to the Applications folder
+          ansible.builtin.shell: |
+            set -euo pipefail
+            APP=$(ls -d dist/mac*/Pomodoro.app | head -1)
+            DEST="{{ (cask_appdir | default('', true) | replace('~', ansible_facts['user_dir'])) or '/Applications' }}"
+            mkdir -p "$DEST"
+            ditto "$APP" "$DEST/Pomodoro.app"
+            echo "Installed $DEST/Pomodoro.app"
+          args:
+            executable: /bin/bash
+            chdir: "{{ pomodoro_src_dir }}"
+      rescue:
+        - name: Record Pomodoro failure
+          ansible.builtin.set_fact:
+            install_failures: >-
+              {{ install_failures + ['pomodoro: ' ~ (ansible_failed_result.stderr_lines | default([]) | last
+                 | default(ansible_failed_result.msg | default('failed'), true))] }}

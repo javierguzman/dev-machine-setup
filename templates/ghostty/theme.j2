@@ -1,0 +1,12 @@
+# Managed by dev-machine-setup. The playbook replaces this file on each run.
+# Theme {{ item.key }} (same colors as the Alacritty theme file)
+background = {{ item.value.background }}
+foreground = {{ item.value.foreground }}
+cursor-color = {{ item.value.cursor }}
+cursor-text = {{ item.value.cursor_text }}
+# Alacritty shows a selection as inverted colors
+selection-background = {{ item.value.foreground }}
+selection-foreground = {{ item.value.background }}
+{% for color in item.value.palette %}
+palette = {{ loop.index0 }}={{ color }}
+{% endfor %}

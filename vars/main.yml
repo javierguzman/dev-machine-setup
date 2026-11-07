@@ -1,0 +1,142 @@
+# Default settings. Per-machine values go into `local.yml`: ./run.sh asks for
+# them and writes the file (or copy `local.yml.example`). Git ignores local.yml,
+# so personal values (Git email, home server) never reach the public repository.
+# Command-line `-e key=value` overrides both files.
+
+# ─── Profiles ─────────────────────────────────────────────────────────────────
+# The profiles are cumulative:
+#   minimal  = developer tools only (shell, editors, terminals, yabai/skhd, languages,
+#              container runtime, Git, YubiKey)
+#   work     = minimal + apps for work (browsers, Slack, notes, design, utilities)
+#   personal = work + personal apps (messaging, media, VPN, photo editing)
+# Each package entry names the lowest profile that gets it.
+profile_order: [minimal, work, personal]
+active_profiles: "{{ profile_order[:(profile_order.index(profile) + 1)] }}"
+
+# Install apps outside the profile, or never install some apps.
+# Use the names from tasks/*.yml (cask, formula, snap, or apt name).
+# A list in local.yml, or a comma-separated string on the command line:
+#   ansible-playbook init.yml -e profile=minimal -e extra_apps=obsidian,slack
+extra_apps: []
+skip_apps: []
+extra_app_list: "{{ (extra_apps.split(',') if extra_apps is string else extra_apps) | map('trim') | select | list }}"
+skip_app_list: "{{ (skip_apps.split(',') if skip_apps is string else skip_apps) | map('trim') | select | list }}"
+
+# Container runtime on macOS (Linux always uses Docker Engine from apt):
+#   docker-desktop  Docker Desktop. Paid subscription at larger companies.
+#   orbstack        OrbStack. Fast and light. Paid license for commercial use.
+#   colima          Colima + Docker CLI. Free and open source, command line only.
+#   rancher         Rancher Desktop. Free and open source, with a GUI.
+#   podman          Podman + Podman Desktop. Free and open source, with a GUI.
+#   none            No container runtime.
+# Default: Colima for minimal and work (free for commercial use), Docker Desktop for personal.
+container_runtime: "{{ 'docker-desktop' if profile == 'personal' else 'colima' }}"
+
+# When a different container runtime already exists (for example Docker Desktop
+# on a laptop where you set colima), install nothing and change no config.
+# The summary lists the runtime that the playbook found.
+container_runtime_keep_existing: true
+
+# ─── Platform ─────────────────────────────────────────────────────────────────
+is_macos: "{{ ansible_facts['os_family'] == 'Darwin' }}"
+is_linux: "{{ ansible_facts['os_family'] == 'Debian' }}"
+is_arm: "{{ ansible_facts['architecture'] in ['arm64', 'aarch64'] }}"
+
+brew_prefix: "{{ '/opt/homebrew' if is_arm else '/usr/local' }}"
+brew_bin: "{{ brew_prefix }}/bin/brew"
+brew_environment:
+  PATH: "{{ brew_prefix }}/bin:{{ brew_prefix }}/sbin:{{ ansible_facts['env']['PATH'] }}"
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_ENV_HINTS: "1"
+
+# Install casks into this folder instead of /Applications.
+# Example for a work laptop without admin rights: "~/Applications"
+cask_appdir: ""
+
+deb_arch: "{{ 'arm64' if is_arm else 'amd64' }}"
+linux_lib_dir: "/usr/lib/{{ 'aarch64' if is_arm else 'x86_64' }}-linux-gnu"
+
+# ─── Git ──────────────────────────────────────────────────────────────────────
+# Identity: set in local.yml (./run.sh asks). Empty = leave user.name / user.email as they are.
+git_user_name: ""
+git_user_email: ""
+git_signing_key: "34D3A6FB8181BEA7"
+git_gpg_sign: true
+
+# Other global settings
+git_extra_config:
+  pull.rebase: "true"
+  init.defaultBranch: main
+
+# SSH for GitHub: push over SSH (the YubiKey), fetch over HTTPS.
+# Fetch stays on HTTPS so that clones work before the YubiKey is set up, and
+# when the YubiKey is not plugged in.
+git_github_push_over_ssh: true
+
+# Lines for the global ignore file (~/.config/git/ignore). Other lines stay.
+git_global_ignore:
+  - "**/.claude/settings.local.json"
+
+# Beyond Compare as diff and merge tool, only when the app is installed.
+git_beyond_compare: true
+
+# ─── SSH ──────────────────────────────────────────────────────────────────────
+# files/ssh_config is vault-encrypted and holds personal hosts.
+# The playbook deploys it only for the personal profile by default, because it
+# replaces ~/.ssh/config. The playbook keeps a backup of the old file.
+ssh_config_deploy: "{{ profile == 'personal' }}"
+
+# ─── Languages ────────────────────────────────────────────────────────────────
+nvm_version: "v0.41.0"
+node_versions: ["lts/*"]      # first entry becomes the nvm default
+python_version: "3.14"        # pyenv installs the latest patch release
+
+# ─── Own apps (tasks/own-apps.yml) ────────────────────────────────────────────
+# Built from source on your own Git server. Set own_git_host in local.yml
+# (./run.sh asks). Empty = skip, and the summary lists the app as a manual install.
+# The server must be reachable (home network or VPN).
+# Clone: SSH first (YubiKey), then HTTPS (saved login).
+own_git_host: ""
+pomodoro_repo_path: "javierguzman/pomodoro"
+pomodoro_repo_ssh: "git@{{ own_git_host }}:{{ pomodoro_repo_path }}.git"
+pomodoro_repo_https: "https://{{ own_git_host }}/{{ pomodoro_repo_path }}.git"
+pomodoro_src_dir: "{{ ansible_facts['user_dir'] }}/Projects/pomodoro"
+
+# ─── Manual installs (macOS) ──────────────────────────────────────────────────
+# Apps with no Homebrew cask and no App Store entry. The summary at the end
+# lists the ones that are missing on this Mac, for the active profiles.
+# App Store apps that `mas` could not install appear in the same list.
+manual_apps:
+  - { name: VMware Fusion, app: VMware Fusion.app, profile: minimal, how: "Broadcom support portal (free account): https://support.broadcom.com" }
+  - { name: Logi Bolt, app: Logi Bolt.app, profile: work, how: "https://www.logitech.com (Downloads > Logi Bolt)" }
+  - { name: Penpot Desktop, app: Penpot Desktop.app, profile: work, how: "vendor website" }
+  - { name: Foxit PDF Reader, app: Foxit PDF Reader.app, profile: personal, how: "https://www.foxit.com" }
+  - { name: darktable, app: darktable.app, profile: personal, how: "https://www.darktable.org/install/ (cask disabled)" }
+  - { name: Configurador FNMT, app: Configurador FNMT.app, profile: personal, how: "https://www.sede.fnmt.gob.es" }
+  - { name: Synology Active Backup for Business Agent, app: Synology Active Backup for Business Agent.app, profile: personal, how: "your NAS: Active Backup for Business > Agent download" }
+  - { name: SILKYPIX RAW File Converter EX 3.0, app: "RAW FILE CONVERTER EX 3.0 powered by SILKYPIX.app", profile: personal, how: "https://fujifilm-x.com (software downloads)" }
+  - { name: Hofmann, app: Hofmann.app, profile: personal, how: "https://www.hofmann.es" }
+  - { name: Polaroid Hi·Print, app: Polaroid Hi·Print.app, profile: personal, how: "https://www.polaroid.com" }
+  - { name: Desk Control, app: Desk Control.app, profile: personal, how: "vendor website" }
+  - { name: Matrix Desktop, app: Matrix Desktop.app, profile: personal, how: "vendor website" }
+  - { name: Astro, app: Astro.app, profile: personal, how: "vendor website" }
+
+# ─── Dotfiles ─────────────────────────────────────────────────────────────────
+# The playbook clones over SSH when GitHub accepts the SSH key, else over HTTPS.
+dotfiles_repo: "https://github.com/javierguzman/.dotfiles.git"
+dotfiles_repo_ssh: "git@github.com:javierguzman/.dotfiles.git"
+dotfiles_dir: "{{ ansible_facts['user_dir'] }}/.dotfiles"
+dotfiles_backup_dir: "{{ ansible_facts['user_dir'] }}/.dotfiles-backup"
+dotfiles_packages:
+  - { name: bin, profile: minimal }
+  - { name: stow, profile: minimal }
+  - { name: zsh, profile: minimal }
+  - { name: bash, profile: minimal }
+  - { name: nvim, profile: minimal }
+  - { name: tmux, profile: minimal }
+  - { name: alacritty, profile: minimal }
+  # `os` limits a package to one system. `app` ties it to an app: with that
+  # app in skip_apps, the playbook does not stow the package.
+  - { name: yabai, profile: minimal, os: macos, app: yabai }
+  - { name: skhd, profile: minimal, os: macos, app: skhd }
+  - { name: hypr, profile: minimal, os: linux, app: hyprland }

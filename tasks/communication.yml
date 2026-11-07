@@ -1,0 +1,35 @@
+# Messaging (Slack for work, the rest personal)
+
+- name: Messaging apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: work, cask: slack, snap: slack }
+      - { profile: personal, cask: discord, snap: discord }
+      - { profile: personal, cask: whatsapp, snap: whatsapp-for-linux }
+      - { profile: personal, cask: signal }   # Linux: apt repo below
+      - { profile: personal, cask: telegram, snap: telegram-desktop }
+      - { profile: work, cask: zoom, snap: zoom-client }   # Linux: community snap
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Add Signal apt repository (Linux)
+  become: true
+  ansible.builtin.shell: |
+    set -euo pipefail
+    wget -qO- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor > /usr/share/keyrings/signal-desktop-keyring.gpg
+    echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' > /etc/apt/sources.list.d/signal-xenial.list
+    apt-get update
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/sources.list.d/signal-xenial.list
+  ignore_errors: true
+  when: is_linux and not is_arm and 'signal' in _selected_ids
+
+- name: Install Signal (Linux)
+  become: true
+  ansible.builtin.apt:
+    name: signal-desktop
+    state: present
+  ignore_errors: true
+  when: is_linux and not is_arm and 'signal' in _selected_ids

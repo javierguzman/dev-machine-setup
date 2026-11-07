@@ -1,0 +1,116 @@
+# Editor, terminal multiplexer, terminals, and fonts (minimal)
+
+- name: Terminal and editor packages
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: minimal, brew: neovim, apt: neovim }
+      - { profile: minimal, brew: tmux, apt: tmux }
+      - { profile: minimal, brew: lazygit }            # Linux: GitHub release below
+      - { profile: minimal, cask: iterm2 }
+      # Ghostty is the terminal on both systems, with the Alacritty look.
+      # (The Homebrew alacritty cask is disabled: the releases are not notarized.)
+      # Linux: the snap has the same version as the cask. Debian has no package,
+      # and Ubuntu has one only from 26.04, with an older version.
+      # The alacritty dotfiles still get stowed for an existing Alacritty install.
+      - { profile: minimal, cask: ghostty, snap: ghostty, snap_classic: true }
+      - { profile: minimal, cask: font-fira-code-nerd-font }
+
+# ─── Ghostty config (macOS and Linux) ─────────────────────────────────────────
+# Same look as Alacritty. Values: vars/terminal.yml. Own changes: ~/.config/ghostty/config.local
+
+- name: Configure Ghostty
+  when: "'ghostty' in _selected_ids"
+  block:
+    - name: Create the Ghostty config folders
+      ansible.builtin.file:
+        path: "{{ ansible_facts['user_dir'] }}/.config/ghostty/themes"
+        state: directory
+        mode: "0755"
+
+    - name: Write the Ghostty themes
+      ansible.builtin.template:
+        src: ghostty/theme.j2
+        dest: "{{ ansible_facts['user_dir'] }}/.config/ghostty/themes/{{ item.key }}"
+        mode: "0644"
+      loop: "{{ terminal_themes | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Write the Ghostty config
+      ansible.builtin.template:
+        src: ghostty/config.j2
+        dest: "{{ ansible_facts['user_dir'] }}/.config/ghostty/config.ghostty"   # default name since Ghostty 1.3
+        mode: "0644"
+        backup: true
+
+# ─── iTerm2 config (macOS) ────────────────────────────────────────────────────
+# A Dynamic Profile named "Alacritty" with the same look, set as the default
+# profile. iTerm2 reloads Dynamic Profiles at once. Quit iTerm2 before the run
+# so that it does not overwrite the global settings below when it quits.
+
+- name: Configure iTerm2 (macOS)
+  when: is_macos and 'iterm2' in _selected_ids
+  block:
+    - name: Create the iTerm2 Dynamic Profiles folder
+      ansible.builtin.file:
+        path: "{{ ansible_facts['user_dir'] }}/Library/Application Support/iTerm2/DynamicProfiles"
+        state: directory
+        mode: "0755"
+
+    - name: Write the iTerm2 profile
+      ansible.builtin.template:
+        src: iterm2/profile.json.j2
+        dest: "{{ ansible_facts['user_dir'] }}/Library/Application Support/iTerm2/DynamicProfiles/dev-machine-setup.json"
+        mode: "0644"
+
+    - name: Set iTerm2 global settings
+      community.general.osx_defaults:
+        domain: com.googlecode.iterm2
+        key: "{{ item.key }}"
+        type: "{{ item.type }}"
+        value: "{{ item.value }}"
+      loop:
+        - { key: "Default Bookmark Guid", type: string, value: "{{ iterm2_profile_guid }}" }
+        - { key: TerminalMargin, type: int, value: "{{ terminal_padding }}" }    # side margins
+        - { key: TerminalVMargin, type: int, value: "{{ terminal_padding }}" }   # top/bottom margins
+        - { key: HideTab, type: bool, value: true }                              # no tab bar with one tab
+      loop_control:
+        label: "{{ item.key }}"
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Add neovim PPA (Ubuntu)
+  become: true
+  ansible.builtin.apt_repository:
+    repo: ppa:neovim-ppa/unstable
+    state: present
+  ignore_errors: true
+  when: is_linux and ansible_facts['distribution'] == 'Ubuntu' and 'neovim' in _selected_ids
+
+- name: Install lazygit (Linux)
+  become: true
+  ansible.builtin.shell: |
+    set -euo pipefail
+    VERSION=$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -Po '"tag_name": "v\K[^"]*')
+    curl -fsSLo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/lazygit_${VERSION}_Linux_{{ 'arm64' if is_arm else 'x86_64' }}.tar.gz"
+    tar xf /tmp/lazygit.tar.gz -C /tmp lazygit
+    install /tmp/lazygit /usr/local/bin
+  args:
+    executable: /bin/bash
+    creates: /usr/local/bin/lazygit
+  ignore_errors: true
+  when: is_linux and 'lazygit' in _selected_ids
+
+- name: Install FiraCode Nerd Font (Linux)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    mkdir -p ~/.local/share/fonts
+    curl -fsSLo /tmp/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
+    unzip -o /tmp/FiraCode.zip -d ~/.local/share/fonts/FiraCode
+    fc-cache -f
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_facts['user_dir'] }}/.local/share/fonts/FiraCode"
+  ignore_errors: true
+  when: is_linux and 'font-fira-code-nerd-font' in _selected_ids

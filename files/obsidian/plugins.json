@@ -1,0 +1,21 @@
+{
+  "calendar": "1.5.10",
+  "dataview": "0.5.67",
+  "drawio-obsidian": "1.5.4",
+  "folder-notes": "1.7.32",
+  "note-refactor-obsidian": "1.8.2",
+  "obsidian-advanced-slides": "1.20.0",
+  "obsidian-excalidraw-plugin": "2.5.2",
+  "obsidian-hider": "1.5.1",
+  "obsidian-icon-folder": "2.14.4",
+  "obsidian-linter": "1.34.1",
+  "obsidian-local-rest-api": "2.5.4",
+  "obsidian-meta-bind-plugin": "1.2.3",
+  "obsidian-plugin-toc": "0.2.0",
+  "obsidian-projects": "1.17.4",
+  "obsidian-reading-time": "1.1.2",
+  "obsidian-style-settings": "1.0.9",
+  "obsidian-timestamp-notes": "1.0.8",
+  "quickadd": "1.11.1",
+  "templater-obsidian": "2.9.0"
+}

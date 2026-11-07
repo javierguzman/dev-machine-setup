@@ -1,0 +1,81 @@
+# Terminal look for Ghostty and iTerm2. The values copy the Alacritty config in
+# ~/.dotfiles/alacritty/.config/alacritty/alacritty.toml.
+# tasks/terminal.yml renders templates/ghostty/* and templates/iterm2/* from these values.
+
+terminal_font:
+  family: "FiraCode Nerd Font"
+  size: 14
+  # PostScript names (iTerm2 needs them)
+  postscript:
+    regular: FiraCodeNF-Reg
+    bold: FiraCodeNF-Bold
+    italic: FiraCodeNF-Light
+    bold_italic: FiraCodeNF-SemBd
+  # Ghostty style names (same as the Alacritty `style` values)
+  styles:
+    regular: Regular
+    bold: Bold
+    italic: Light
+    bold_italic: SemiBold
+  # Alacritty does not draw ligatures. Keep false to look the same.
+  ligatures: false
+
+terminal_padding: 8          # pixels, both directions
+terminal_opacity: 0.95
+terminal_cursor_blink: true  # block cursor
+
+# Theme for both terminals: tokyo-night-dark | tokyo-night-light
+# Ghostty also accepts "light:tokyo-night-light,dark:tokyo-night-dark" to follow
+# the macOS appearance. iTerm2 uses the dark/light pair when the value has a comma.
+terminal_theme: tokyo-night-dark
+
+# Fixed so that iTerm2 updates the profile instead of adding a new one.
+iterm2_profile_guid: "6F3B4C2E-8A1D-4E7B-9C5F-2D0A1B3C4E5F"
+iterm2_profile_name: "Alacritty"
+
+terminal_themes:
+  tokyo-night-dark:
+    background: "#1a1b26"
+    foreground: "#c0caf5"
+    cursor: "#c0caf5"
+    cursor_text: "#1a1b26"
+    # 0-7 normal, 8-15 bright
+    palette:
+      - "#15161e"
+      - "#f7768e"
+      - "#9ece6a"
+      - "#e0af68"
+      - "#7aa2f7"
+      - "#bb9af7"
+      - "#7dcfff"
+      - "#a9b1d6"
+      - "#414868"
+      - "#f7768e"
+      - "#9ece6a"
+      - "#e0af68"
+      - "#7aa2f7"
+      - "#bb9af7"
+      - "#7dcfff"
+      - "#c0caf5"
+  tokyo-night-light:
+    background: "#d5d6db"
+    foreground: "#343b58"
+    cursor: "#343b58"
+    cursor_text: "#d5d6db"
+    palette:
+      - "#343b58"
+      - "#8c4351"
+      - "#485e30"
+      - "#8f5e15"
+      - "#34548a"
+      - "#5a4a78"
+      - "#0f4b6e"
+      - "#8990b3"
+      - "#4c505e"
+      - "#8c4351"
+      - "#485e30"
+      - "#8f5e15"
+      - "#34548a"
+      - "#5a4a78"
+      - "#0f4b6e"
+      - "#343b58"

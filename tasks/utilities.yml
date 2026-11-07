@@ -1,26 +1,61 @@
-# macOS
-# These are macOS-only tools (menu bar utilities, Objective-See security suite,
-# Mac-specific input/clipboard tools) — no meaningful Linux equivalent, so no
-# Linux block here.
-- name: Install utility and security apps (macOS)
-  community.general.homebrew_cask:
-    name:
-      - bitwarden
-      - keka
-      - maccy
-      - linearmouse
-      - hiddenbar
-      - lulu
-      - oversight
-      - knockknock
-      - alfred
-    state: present
-  when: ansible_os_family == "Darwin"
+# Desktop utilities (macOS) and security tools
 
-# Linux
-- name: Install Bitwarden via snap (Linux)
+- name: Utility apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      # work: general desktop helpers
+      - { profile: work, cask: alfred }
+      - { profile: work, cask: keka }
+      - { profile: work, cask: maccy }
+      - { profile: work, cask: linearmouse }
+      - { profile: work, cask: hiddenbar }
+      # Dygma keyboard configurator. Linux: AppImage below (no snap or apt package)
+      - { profile: work, cask: bazecor }
+      - { profile: work, cask: shottr }          # screenshots with annotation
+      - { profile: work, cask: logi-options+ }   # Logitech mouse/keyboard settings
+      # personal: own password manager and Objective-See security tools.
+      # Work laptops usually have their own password manager and endpoint
+      # security, and the LuLu firewall can conflict with them.
+      - { profile: personal, cask: bitwarden, snap: bitwarden }
+      - { profile: personal, cask: lulu }
+      - { profile: personal, cask: oversight, app: OverSight.app }
+      - { profile: personal, cask: knockknock }
+      - { profile: personal, cask: cold-turkey-blocker }
+      - { profile: personal, cask: the-unarchiver }
+      - { profile: personal, cask: macdroid }      # Android file transfer
+      - { profile: personal, cask: home-assistant }
+      - { profile: personal, cask: autofirma }     # Spanish government digital signature
+      # Brother label printer: Mac App Store only
+      - { profile: personal, name: p-touch-editor, mas: 1453365242, app: P-touch Editor.app }
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+# Bazecor: Dygma publishes an x64 AppImage only. AppImages need FUSE 2.
+# On the first start, Bazecor asks to install its udev rules (keyboard access
+# over USB); accept that prompt.
+- name: Install FUSE 2 for AppImages (Linux)
   become: true
-  community.general.snap:
-    name: bitwarden
+  ansible.builtin.apt:
+    name: "{{ 'libfuse2t64' if ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] is version('24.04', '>=') else 'libfuse2' }}"
     state: present
-  when: ansible_os_family == "Debian"
+  ignore_errors: true
+  when: is_linux and not is_arm and 'bazecor' in _selected_ids
+
+- name: Install Bazecor AppImage (Linux)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    URL=$(curl -fsSL https://api.github.com/repos/Dygmalab/Bazecor/releases/latest \
+      | python3 -c "import sys, json; print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('-x64.AppImage')][0])")
+    mkdir -p ~/.local/opt/bazecor ~/.local/bin ~/.local/share/applications
+    curl -fsSLo ~/.local/opt/bazecor/Bazecor.AppImage "$URL"
+    chmod +x ~/.local/opt/bazecor/Bazecor.AppImage
+    ln -sf ~/.local/opt/bazecor/Bazecor.AppImage ~/.local/bin/bazecor
+    printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Bazecor' \
+      "Exec=$HOME/.local/opt/bazecor/Bazecor.AppImage" 'Categories=Utility;' \
+      > ~/.local/share/applications/bazecor.desktop
+  args:
+    executable: /bin/bash
+    creates: "{{ ansible_facts['user_dir'] }}/.local/opt/bazecor/Bazecor.AppImage"
+  ignore_errors: true
+  when: is_linux and not is_arm and 'bazecor' in _selected_ids

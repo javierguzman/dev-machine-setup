@@ -1,0 +1,289 @@
+{
+  "app:open-help": [],
+  "app:toggle-left-sidebar": [
+    {
+      "key": "ArrowLeft",
+      "modifiers": [
+        "Mod"
+      ]
+    },
+    {
+      "key": "1",
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ]
+    }
+  ],
+  "app:toggle-right-sidebar": [
+    {
+      "key": "ArrowRight",
+      "modifiers": [
+        "Mod"
+      ]
+    },
+    {
+      "key": "0",
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ]
+    }
+  ],
+  "bases:new-file": [
+    {
+      "key": "B",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "command-palette:open": [
+    {
+      "key": "P",
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ]
+    }
+  ],
+  "editor:fold-all": [
+    {
+      "key": "F",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:indent-list": [
+    {
+      "key": "I",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:insert-callout": [
+    {
+      "key": "C",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:insert-codeblock": [
+    {
+      "key": "C",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:insert-wikilink": [
+    {
+      "key": "L",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-0": [
+    {
+      "key": "H",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-1": [
+    {
+      "key": "1",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-2": [
+    {
+      "key": "2",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-3": [
+    {
+      "key": "3",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-4": [
+    {
+      "key": "4",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-5": [
+    {
+      "key": "5",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:set-heading-6": [
+    {
+      "key": "6",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:toggle-blockquote": [
+    {
+      "key": "Q",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:toggle-bullet-list": [
+    {
+      "key": ".",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:toggle-checklist-status": [
+    {
+      "key": "L",
+      "modifiers": [
+        "Mod"
+      ]
+    }
+  ],
+  "editor:toggle-numbered-list": [
+    {
+      "key": ".",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:unfold-all": [
+    {
+      "key": "F",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "editor:unindent-list": [
+    {
+      "key": "I",
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ]
+    }
+  ],
+  "file-explorer:move-file": [
+    {
+      "key": "M",
+      "modifiers": [
+        "Mod"
+      ]
+    }
+  ],
+  "file-explorer:new-file": [],
+  "file-explorer:new-file-in-new-pane": [],
+  "file-explorer:open": [
+    {
+      "key": "E",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "file-explorer:reveal-active-file": [
+    {
+      "key": "F1",
+      "modifiers": []
+    }
+  ],
+  "global-search:open": [
+    {
+      "key": "F",
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ]
+    }
+  ],
+  "markdown:add-metadata-property": [],
+  "note-refactor-obsidian:app:extract-selection-first-line": [],
+  "obsidian-advanced-slides:open-advanced-slides-preview": [],
+  "obsidian-plugin-toc:create-toc": [
+    {
+      "key": "T",
+      "modifiers": [
+        "Ctrl"
+      ]
+    }
+  ],
+  "switcher:open": [
+    {
+      "key": "P",
+      "modifiers": [
+        "Mod"
+      ]
+    }
+  ],
+  "templater-obsidian:insert-templater": [
+    {
+      "key": "T",
+      "modifiers": [
+        "Alt",
+        "Mod"
+      ]
+    }
+  ],
+  "window:zoom-in": [
+    {
+      "key": "=",
+      "modifiers": [
+        "Mod"
+      ]
+    }
+  ],
+  "window:zoom-out": [
+    {
+      "key": "-",
+      "modifiers": [
+        "Mod"
+      ]
+    }
+  ],
+  "workspace:goto-tab-1": [
+    {
+      "key": "1",
+      "modifiers": [
+        "Mod"
+      ]
+    }
+  ]
+}

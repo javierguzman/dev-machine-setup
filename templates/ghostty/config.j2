@@ -1,0 +1,55 @@
+# Managed by dev-machine-setup. The playbook replaces this file on each run.
+# Source: dev-machine-setup templates/ghostty/config.j2 + vars/terminal.yml
+# The values copy the Alacritty config. Put your own changes in config.local
+# (same folder). The playbook does not touch that file.
+
+# Font
+font-family = {{ terminal_font.family }}
+font-style = {{ terminal_font.styles.regular }}
+font-style-bold = {{ terminal_font.styles.bold }}
+font-style-italic = {{ terminal_font.styles.italic }}
+font-style-bold-italic = {{ terminal_font.styles.bold_italic }}
+font-size = {{ terminal_font.size }}
+{% if not terminal_font.ligatures %}
+# Alacritty draws no ligatures
+font-feature = -calt
+font-feature = -liga
+font-feature = -dlig
+{% endif %}
+
+# Colors (themes/ folder next to this file)
+theme = {{ terminal_theme }}
+
+# Window
+{% if is_macos %}
+# Alacritty "buttonless" = no title bar
+macos-titlebar-style = hidden
+{% else %}
+# Linux: the default decoration (auto) keeps the title bar under GNOME, and lets
+# a tiling compositor (Sway, Hyprland) remove it. Alacritty does the same on Linux.
+window-decoration = auto
+{% endif %}
+window-padding-x = {{ terminal_padding }}
+window-padding-y = {{ terminal_padding }}
+background-opacity = {{ terminal_opacity }}
+confirm-close-surface = false
+
+# Cursor: blinking block. Shell integration changes the cursor to a bar at the
+# prompt; Alacritty does not, so turn that feature off.
+cursor-style = block
+cursor-style-blink = {{ terminal_cursor_blink | lower }}
+shell-integration-features = no-cursor
+
+{% if is_macos %}
+# Keyboard: left Option is Alt (Alacritty option_as_alt = "OnlyLeft")
+macos-option-as-alt = left
+{% endif %}
+# Same escape sequences as the Alacritty key bindings (word jumps in the shell)
+keybind = alt+arrow_left=text:\x1bb
+keybind = alt+arrow_right=text:\x1bf
+keybind = alt+period=text:\x1b.
+keybind = alt+comma=text:\x1b,
+keybind = alt+tab=text:\x1b\t
+
+# Optional local overrides (the "?" means: no error when the file is missing)
+config-file = ?config.local

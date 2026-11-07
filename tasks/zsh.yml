@@ -1,45 +1,30 @@
-# macOS
-- name: Install Zsh (macOS)
-  community.general.homebrew:
-    name: zsh
-    state: present
-  when: ansible_os_family == "Darwin"
+# Zsh, Oh-My-Zsh, Powerlevel10k (minimal)
+# macOS ships zsh as /bin/zsh, so the playbook does not install it there.
 
-- name: Set default shell to zsh (macOS)
-  ansible.builtin.command: chsh -s /opt/homebrew/bin/zsh {{ ansible_env.USER }}
+- name: Zsh package
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: minimal, apt: zsh }
+
+- name: Set the default shell to zsh
   become: true
-  changed_when: false
-  when: ansible_os_family == "Darwin"
+  ansible.builtin.user:
+    name: "{{ ansible_facts['user_id'] }}"
+    shell: "{{ '/bin/zsh' if is_macos else '/usr/bin/zsh' }}"
+  ignore_errors: true
+  when: not (ansible_facts['user_shell'] | default('') is search('zsh$'))
 
-# Linux
-- name: Install Zsh (Linux)
-  become: true
-  apt:
-    name: zsh
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Set default shell to zsh (Linux)
-  ansible.builtin.command: chsh -s /usr/bin/zsh {{ ansible_env.USER }}
-  become: true
-  changed_when: false
-  when: ansible_os_family == "Debian"
-
-# Cross-platform
-- name: Clone Oh-My-Zsh repository
-  git:
-    repo: https://github.com/ohmyzsh/ohmyzsh.git
-    dest: "{{ ansible_user_dir }}/.oh-my-zsh"
+- name: Clone Oh-My-Zsh, theme, and plugins
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ ansible_facts['user_dir'] }}/{{ item.dest }}"
     version: master
-
-- name: Install Powerlevel10k theme
-  git:
-    repo: https://github.com/romkatv/powerlevel10k.git
-    dest: "{{ ansible_user_dir }}/.oh-my-zsh/custom/themes/powerlevel10k"
-    version: master
-
-- name: Clone Zsh-autosuggestions repository
-  git:
-    repo: https://github.com/zsh-users/zsh-autosuggestions.git
-    dest: "{{ ansible_user_dir }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-    version: master
+    depth: 1
+  loop:
+    - { repo: "https://github.com/ohmyzsh/ohmyzsh.git", dest: ".oh-my-zsh" }
+    - { repo: "https://github.com/romkatv/powerlevel10k.git", dest: ".oh-my-zsh/custom/themes/powerlevel10k" }
+    - { repo: "https://github.com/zsh-users/zsh-autosuggestions.git", dest: ".oh-my-zsh/custom/plugins/zsh-autosuggestions" }
+  loop_control:
+    label: "{{ item.dest }}"
+  ignore_errors: true

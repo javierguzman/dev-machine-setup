@@ -1,0 +1,41 @@
+# Per-machine settings. ./run.sh asks for the common ones and writes local.yml.
+# Or copy this file to `local.yml` (Git ignores it) and keep only the lines you need. See vars/main.yml and vars/terminal.yml for all settings.
+
+# The profile for this machine: minimal | work | personal
+profile: minimal
+
+# Apps outside the profile. Use the names from tasks/*.yml.
+extra_apps:
+  - obsidian
+  - slack
+
+# Apps to never install (also stops the matching dotfiles, for example yabai)
+# skip_apps:
+#   - lm-studio
+
+# Container runtime on macOS: docker-desktop | orbstack | colima | rancher | podman | none
+# Default: colima for minimal and work, docker-desktop for personal.
+# Colima is free for commercial use and needs no license.
+# container_runtime: colima
+# Install the selected runtime even when a different one already exists:
+# container_runtime_keep_existing: false
+
+# Git identity (empty = leave the current user.name / user.email unchanged)
+# git_user_name: "Your Name"
+# git_user_email: "you@example.com"
+# git_gpg_sign: false
+
+# Install casks into your home folder (no admin rights needed for most apps)
+# cask_appdir: "~/Applications"
+
+# Terminal theme for Ghostty and iTerm2. A pair follows the macOS appearance:
+# terminal_theme: "light:tokyo-night-light,dark:tokyo-night-dark"
+
+# Obsidian vaults to set up with your settings (no note content)
+# obsidian_vaults: ["~/Documents/Work-Notes"]
+
+# Your own Git server for own apps (Pomodoro); empty = skip
+# own_git_host: "git.example.lan"
+
+# Deploy the vault-encrypted ~/.ssh/config (needs --ask-vault-pass)
+# ssh_config_deploy: false

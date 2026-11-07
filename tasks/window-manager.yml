@@ -1,0 +1,72 @@
+# Keyboard-driven window manager (minimal)
+#   macOS: yabai + skhd. Both need the Accessibility permission. Grant it in
+#          System Settings after the first start. The project moved from
+#          koekeishiya to asmvik; the old tap name only redirects.
+#   Linux: Hyprland, with the same keys (dotfiles package `hypr`). It is a
+#          separate session: choose "Hyprland" on the login screen. GNOME stays.
+#          Ubuntu 26.04 or later only: older releases and Debian have no
+#          Hyprland, or a version that cannot read the 0.53 config syntax.
+
+- name: Window manager packages
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: minimal, tap: asmvik/formulae, brew: asmvik/formulae/yabai }
+      - { profile: minimal, tap: asmvik/formulae, brew: asmvik/formulae/skhd }
+      # Linux: installed below, because it needs a release check
+      - { profile: minimal, name: hyprland }
+
+# ─── macOS ────────────────────────────────────────────────────────────────────
+
+# Start a service only when launchd does not have it yet.
+- name: Start yabai and skhd services (macOS)
+  ansible.builtin.shell: |
+    if launchctl list | grep -qE '\.{{ item }}$'; then
+      echo "ALREADY_RUNNING"
+    else
+      "{{ brew_prefix }}/bin/{{ item }}" --start-service
+    fi
+  args:
+    executable: /bin/bash
+    removes: "{{ brew_prefix }}/bin/{{ item }}"
+  loop: [yabai, skhd]
+  register: _wm_service
+  changed_when: "'ALREADY_RUNNING' not in _wm_service.stdout"
+  ignore_errors: true
+  when: is_macos and item in _selected_ids
+
+# ─── Linux ────────────────────────────────────────────────────────────────────
+
+- name: Check the release for Hyprland (Linux)
+  ansible.builtin.set_fact:
+    _hyprland_supported: >-
+      {{ ansible_facts['distribution'] == 'Ubuntu'
+         and ansible_facts['distribution_version'] is version('26.04', '>=') }}
+  when: is_linux and 'hyprland' in _selected_ids
+
+- name: Install Hyprland and its desktop parts (Linux)
+  become: true
+  ansible.builtin.apt:
+    name:
+      - hyprland
+      - xdg-desktop-portal-hyprland   # screen sharing, file dialogs
+      - hyprpolkitagent               # password prompts for admin actions
+      - waybar                        # status bar
+      - wofi                          # app launcher (SUPER+Space)
+      - mako-notifier                 # notifications
+      - wl-clipboard                  # clipboard tools for Wayland
+    state: present
+  register: _hyprland_install
+  ignore_errors: true
+  when: is_linux and 'hyprland' in _selected_ids and _hyprland_supported | default(false)
+
+- name: Record Hyprland result (Linux)
+  ansible.builtin.set_fact:
+    install_failures: >-
+      {{ install_failures
+         + (['hyprland: needs Ubuntu 26.04 or later (found '
+             ~ ansible_facts['distribution'] ~ ' ' ~ ansible_facts['distribution_version'] ~ ')']
+            if not (_hyprland_supported | default(false)) else [])
+         + (['hyprland: ' ~ (_hyprland_install.msg | default('apt failed'))]
+            if _hyprland_install is failed else []) }}
+  when: is_linux and 'hyprland' in _selected_ids

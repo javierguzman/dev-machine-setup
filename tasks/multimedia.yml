@@ -1,23 +1,25 @@
-# macOS
-- name: Install VLC & Spotify (macOS)
-  community.general.homebrew_cask:
-    name:
-      - spotify
-      - vlc
-    state: present
-  when: ansible_os_family == "Darwin"
+# Music, video, and the YouTube downloader (personal)
 
-# Linux
-- name: Install VLC (Linux)
-  become: true
-  apt:
-    name: vlc
-    state: present
-  when: ansible_os_family == "Debian"
+- name: Multimedia apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: personal, cask: spotify, snap: spotify }
+      - { profile: personal, cask: vlc, apt: vlc }
+      - { profile: personal, brew: ffmpeg, apt: ffmpeg }
+      - { profile: personal, brew: yt-dlp }   # Linux: GitHub release below
+      - { profile: personal, cask: obs, apt: obs-studio }
+      - { profile: personal, cask: capcut }
+      - { profile: personal, cask: transmission, apt: transmission-gtk }
+      - { profile: personal, cask: focusrite-control-2 }   # audio interface
+      # The free DaVinci Resolve: Mac App Store only
+      - { profile: personal, name: davinci-resolve, mas: 571213070, app: DaVinci Resolve.app }
 
-- name: Install Spotify via snap (Linux)
+- name: Install yt-dlp (Linux)
   become: true
-  community.general.snap:
-    name: spotify
-    state: present
-  when: ansible_os_family == "Debian"
+  ansible.builtin.get_url:
+    url: https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+    dest: /usr/local/bin/yt-dlp
+    mode: "0755"
+  ignore_errors: true
+  when: is_linux and 'yt-dlp' in _selected_ids

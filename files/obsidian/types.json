@@ -1,0 +1,27 @@
+{
+  "types": {
+    "aliases": "aliases",
+    "cssclasses": "multitext",
+    "excalidraw-autoexport": "text",
+    "excalidraw-border-color": "text",
+    "excalidraw-css": "text",
+    "excalidraw-default-mode": "text",
+    "excalidraw-embeddable-theme": "text",
+    "excalidraw-export-dark": "checkbox",
+    "excalidraw-export-embed-scene": "checkbox",
+    "excalidraw-export-padding": "number",
+    "excalidraw-export-pngscale": "number",
+    "excalidraw-export-transparent": "checkbox",
+    "excalidraw-font": "text",
+    "excalidraw-font-color": "text",
+    "excalidraw-link-brackets": "checkbox",
+    "excalidraw-link-prefix": "text",
+    "excalidraw-linkbutton-opacity": "number",
+    "excalidraw-mask": "checkbox",
+    "excalidraw-onload-script": "text",
+    "excalidraw-open-md": "checkbox",
+    "excalidraw-plugin": "text",
+    "excalidraw-url-prefix": "text",
+    "tags": "tags"
+  }
+}

@@ -1,0 +1,121 @@
+# macOS settings that `ansible-playbook export.yml --tags macos` reads from
+# this Mac into files/macos-settings.json. tasks/macos-settings.yml applies
+# that file on every Mac (no Apple ID needed, so it also works on a work laptop).
+#
+# To keep a new setting: change it in System Settings, add its key here,
+# run the export playbook, and commit files/macos-settings.json.
+# To find a key: `defaults read <domain>` before and after the change.
+
+macos_settings_file: "{{ playbook_dir }}/files/macos-settings.json"
+macos_settings_apply: true
+
+macos_settings_keys:
+  NSGlobalDomain:
+    # Keyboard and text
+    - KeyRepeat
+    - InitialKeyRepeat
+    - ApplePressAndHoldEnabled          # off = key repeat instead of the accent menu
+    - AppleKeyboardUIMode               # Tab moves between all controls
+    - com.apple.keyboard.fnState        # F1-F12 as standard function keys
+    - NSAutomaticSpellingCorrectionEnabled
+    - NSAutomaticCapitalizationEnabled
+    - NSAutomaticPeriodSubstitutionEnabled
+    - NSAutomaticQuoteSubstitutionEnabled
+    - NSAutomaticDashSubstitutionEnabled
+    - NSUserKeyEquivalents              # Keyboard > App Shortcuts (all apps)
+    # Look, language, region
+    - AppleInterfaceStyle
+    - AppleInterfaceStyleSwitchesAutomatically
+    - AppleAccentColor
+    - AppleHighlightColor
+    - AppleShowScrollBars
+    - _HIHideMenuBar
+    - AppleLanguages
+    - AppleLocale
+    - AppleMeasurementUnits
+    - AppleTemperatureUnit
+    - AppleICUForce24HourTime
+    # Mouse and trackpad
+    - com.apple.swipescrolldirection    # natural scrolling
+    - com.apple.trackpad.scaling        # tracking speed
+    - com.apple.mouse.scaling
+    - com.apple.mouse.tapBehavior
+    - NSWindowShouldDragOnGesture       # Ctrl+Cmd+drag moves a window
+    # Finder
+    - AppleShowAllExtensions
+  com.apple.HIToolbox:
+    - AppleEnabledInputSources          # keyboard layouts (Spanish - ISO)
+    - AppleSelectedInputSources
+    - AppleFnUsageType                  # the fn/globe key action
+  com.apple.symbolichotkeys:
+    - AppleSymbolicHotKeys              # Keyboard Shortcuts: Spotlight, Spaces (Ctrl+1-5), screenshots
+  com.apple.dock:
+    - autohide
+    - autohide-delay
+    - autohide-time-modifier
+    - tilesize
+    - largesize
+    - magnification
+    - orientation
+    - show-recents
+    - mru-spaces                        # keep Spaces in a fixed order (yabai)
+    - expose-group-apps
+    - minimize-to-application
+    - mineffect
+    - showhidden
+    - wvous-tl-corner                   # hot corners
+    - wvous-tr-corner
+    - wvous-bl-corner
+    - wvous-br-corner
+  com.apple.spaces:
+    - spans-displays                    # each display has its own Spaces
+  com.apple.WindowManager:
+    - GloballyEnabled                   # Stage Manager
+    - EnableStandardClickToShowDesktop  # click wallpaper to show the desktop
+    - EnableTiledWindowMargins
+    - EnableTilingByEdgeDrag            # macOS window tiling (conflicts with yabai)
+    - EnableTopTilingByEdgeDrag
+    - EnableTilingOptionAccelerator
+    - HideDesktop
+    - StandardHideWidgets
+  com.apple.finder:
+    - AppleShowAllFiles
+    - ShowPathbar
+    - ShowStatusBar
+    - FXPreferredViewStyle
+    - FXDefaultSearchScope
+    - _FXShowPosixPathInTitle
+    - _FXSortFoldersFirst
+    - NewWindowTarget
+    - NewWindowTargetPath
+    - FXEnableExtensionChangeWarning
+    - FXRemoveOldTrashItems
+    - ShowExternalHardDrivesOnDesktop
+    - ShowRemovableMediaOnDesktop
+    - ShowHardDrivesOnDesktop
+  com.apple.AppleMultitouchTrackpad:
+    - Clicking                          # tap to click
+    - TrackpadThreeFingerDrag
+    - TrackpadRightClick
+    - TrackpadCornerSecondaryClick
+    - FirstClickThreshold
+    - ActuationStrength
+  com.apple.driver.AppleBluetoothMultitouch.trackpad:
+    - Clicking
+    - TrackpadThreeFingerDrag
+    - TrackpadRightClick
+  com.apple.screencapture:
+    - location
+    - type
+    - disable-shadow
+    - show-thumbnail
+  com.apple.menuextra.clock:
+    - ShowSeconds
+    - ShowDate
+    - ShowDayOfWeek
+    - Show24Hour
+  com.apple.desktopservices:
+    - DSDontWriteNetworkStores          # no .DS_Store files on network shares
+    - DSDontWriteUSBStores
+  com.apple.ActivityMonitor:
+    - ShowCategory

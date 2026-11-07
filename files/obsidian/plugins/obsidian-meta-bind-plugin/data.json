@@ -1,0 +1,23 @@
+{
+  "buttonTemplates": [],
+  "devMode": false,
+  "enableEditorRightClickMenu": true,
+  "enableJs": false,
+  "enableSyntaxHighlighting": true,
+  "excludedFolders": [
+    "templates"
+  ],
+  "firstWeekday": {
+    "index": 1,
+    "name": "Monday",
+    "shortName": "Mo"
+  },
+  "ignoreCodeBlockRestrictions": false,
+  "inputFieldTemplates": [],
+  "maxSyncInterval": 1000,
+  "minSyncInterval": 50,
+  "preferredDateFormat": "YYYY-MM-DD",
+  "syncInterval": 200,
+  "useUsDateInputOrder": false,
+  "viewFieldDisplayNullAsEmpty": false
+}

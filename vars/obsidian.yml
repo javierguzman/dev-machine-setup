@@ -1,0 +1,55 @@
+# Obsidian settings without note content.
+#   Export (main Mac):  ansible-playbook export.yml --tags obsidian
+#   Apply (any machine): the playbook creates <vault>/.obsidian for each vault in
+#                        obsidian_vaults that has no .obsidian folder yet.
+# This repository is public: the export removes secrets and personal structure,
+# and a final scan stops the export when something personal is left.
+
+# The vault to export. Empty = the open vault in Obsidian (from its own vault
+# list), so the vault name does not need to be in this public repository.
+obsidian_source_vault: ""
+obsidian_config_dir: "{{ playbook_dir }}/files/obsidian"
+
+# Vaults to set up on this machine, for a machine without LiveSync (for example
+# a new work vault). Set it in local.yml. An existing .obsidian folder stays
+# untouched. The personal vault gets its settings from LiveSync (home network).
+obsidian_vaults: []
+
+# Plugins that are no longer in Obsidian's community list but still have releases
+obsidian_plugin_repos:
+  obsidian-projects: marcusolsson/obsidian-projects   # repository moved
+
+obsidian_export_rules:
+  # Vault settings files to export
+  files:
+    - app.json             # editor settings
+    - appearance.json      # theme, fonts
+    - core-plugins.json    # enabled core plugins
+    - community-plugins.json
+    - hotkeys.json
+    - graph.json
+    - types.json           # property types
+  # Keys with folder paths or search text
+  strip_keys:
+    app.json: [attachmentFolderPath, newFileFolderPath, userIgnoreFilters]
+    graph.json: [search, colorGroups]
+  # Hotkeys for personal macros and template files
+  drop_hotkeys: ["quickadd:choice:", "/"]
+  # Plugins that get installed with default settings: their data.json has
+  # secrets or personal structure.
+  plugin_data_exclude:
+    - copilot                     # AI API keys
+    - obsidian-local-rest-api     # API key, certificate
+    - quickadd                    # macros with personal folders
+    - templater-obsidian          # template folders, folder templates
+    - obsidian-projects           # personal projects
+    - obsidian-icon-folder        # icons per personal folder
+    - obsidian-excalidraw-plugin  # folders and scripts (3.8 MB)
+  # Plugins that never get installed in other vaults (their hotkeys go too)
+  plugins_exclude:
+    - obsidian-livesync           # syncs with the home network: no access from work
+    - languagetool                # uses the home LanguageTool server
+    - obsidian-vault-changelog    # optional: list of recently changed files
+    - settings-search             # built into Obsidian since 1.13; plugin deprecated
+  # Property types of excluded plugins (types.json)
+  drop_type_prefixes: ["lt-"]     # LanguageTool

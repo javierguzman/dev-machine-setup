@@ -1,51 +1,62 @@
-# macOS
-- name: Install Pyenv (macOS)
-  community.general.homebrew:
-    name: pyenv
-    state: present
-  when: ansible_os_family == "Darwin"
+# Python via pyenv (minimal)
+# The dotfiles .zshrc already runs `pyenv init`, so this file does not edit ~/.zshrc.
 
-# Linux
-- name: Install pyenv build dependencies (Linux)
-  become: true
-  apt:
-    name:
-      - libssl-dev
-      - zlib1g-dev
-      - libbz2-dev
-      - libreadline-dev
-      - libsqlite3-dev
-      - libncursesw5-dev
-      - xz-utils
-      - tk-dev
-      - libxml2-dev
-      - libxmlsec1-dev
-      - libffi-dev
-      - liblzma-dev
-    state: present
-  when: ansible_os_family == "Debian"
+- name: pyenv and Python build dependencies
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: minimal, brew: pyenv }
+      # macOS build dependencies (from the pyenv wiki)
+      - { profile: minimal, brew: openssl@3 }
+      - { profile: minimal, brew: readline }
+      - { profile: minimal, brew: sqlite }
+      - { profile: minimal, brew: xz }
+      - { profile: minimal, brew: zlib }
+      - { profile: minimal, brew: tcl-tk@8 }
+      - { profile: minimal, brew: libb2 }
+      - { profile: minimal, brew: zstd }
+      - { profile: minimal, brew: pkgconf }
+      # Linux build dependencies
+      - profile: minimal
+        apt:
+          - libssl-dev
+          - zlib1g-dev
+          - libbz2-dev
+          - libreadline-dev
+          - libsqlite3-dev
+          - libncurses-dev
+          - xz-utils
+          - tk-dev
+          - libxml2-dev
+          - libxmlsec1-dev
+          - libffi-dev
+          - liblzma-dev
 
 - name: Install pyenv (Linux)
-  shell: curl https://pyenv.run | bash
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://pyenv.run | bash
   args:
-    creates: "{{ ansible_user_dir }}/.pyenv/bin/pyenv"
-  when: ansible_os_family == "Debian"
+    executable: /bin/bash
+    creates: "{{ ansible_facts['user_dir'] }}/.pyenv/bin/pyenv"
+  ignore_errors: true
+  when: is_linux
 
-# Cross-platform
-- name: Add Pyenv initialization to shell profile
-  lineinfile:
-    path: "{{ ansible_user_dir }}/.zshrc"
-    line: 'eval "$(pyenv init --path)"'
-    create: yes
-    insertafter: EOF
-
-- name: Install Python 3.11 using Pyenv
-  shell: |
+- name: Install Python {{ python_version }} with pyenv
+  ansible.builtin.shell: |
+    set -euo pipefail
     export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init --path)"
-    pyenv install -s 3.11
-    pyenv global 3.11
+    export PATH="$PYENV_ROOT/bin:{{ brew_prefix }}/bin:$PATH"
+    if pyenv versions --bare | grep -qE '^{{ python_version | regex_escape }}(\.|$)'; then
+      echo "ALREADY_INSTALLED"
+    else
+      pyenv install '{{ python_version }}'
+    fi
+    # Set the global version only when none is set yet.
+    if [ "$(pyenv global)" = "system" ]; then
+      pyenv global "$(pyenv versions --bare | grep -E '^{{ python_version | regex_escape }}(\.|$)' | tail -1)"
+    fi
     pyenv rehash
   args:
     executable: /bin/bash
+  register: _pyenv_install
+  changed_when: "'ALREADY_INSTALLED' not in _pyenv_install.stdout"
+  ignore_errors: true

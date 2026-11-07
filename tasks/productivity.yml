@@ -1,0 +1,45 @@
+# Notes and email (work, personal)
+
+- name: Productivity apps
+  ansible.builtin.include_tasks: lib/packages.yml
+  vars:
+    packages:
+      - { profile: work, cask: obsidian, snap: obsidian, snap_classic: true }
+      - { profile: personal, cask: thunderbird, apt: thunderbird }
+      - { profile: work, cask: onlyoffice, snap: onlyoffice-desktopeditors }
+      - { profile: work, cask: stirling-pdf }   # PDF tools
+      - { profile: work, cask: reverso }        # translation
+
+# ─── Obsidian settings (vars/obsidian.yml) ────────────────────────────────────
+# Creates <vault>/.obsidian from files/obsidian/ for each vault in
+# obsidian_vaults, and downloads the plugins and themes. A vault that already
+# has a .obsidian folder stays untouched.
+
+- name: Create the Obsidian vault folders
+  ansible.builtin.file:
+    path: "{{ item | expanduser }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ obsidian_vaults }}"
+  when: "'obsidian' in _selected_ids"
+
+- name: Set up Obsidian vault settings
+  ansible.builtin.command:
+    argv: "{{ [ansible_playbook_python, playbook_dir ~ '/scripts/obsidian_config.py', 'apply',
+               '--src', obsidian_config_dir, '--vault', item | expanduser,
+               '--repos-json', obsidian_plugin_repos | to_json]
+              + (['--check'] if ansible_check_mode else []) }}"
+  loop: "{{ obsidian_vaults }}"
+  register: _obsidian_apply
+  changed_when: "'CREATE' in _obsidian_apply.stdout"
+  failed_when: false
+  check_mode: false   # the script has its own --check mode
+  when: "'obsidian' in _selected_ids"
+
+- name: Record Obsidian download failures
+  ansible.builtin.set_fact:
+    install_failures: >-
+      {{ install_failures + (_obsidian_apply.results | default([])
+         | map(attribute='stdout_lines', default=[]) | flatten
+         | select('match', '^FAILED') | map('regex_replace', '^FAILED ', 'obsidian ') | list) }}
+  when: "'obsidian' in _selected_ids"

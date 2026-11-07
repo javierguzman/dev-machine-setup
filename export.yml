@@ -1,0 +1,54 @@
+# Export settings from this Mac into the repository. Commit the result.
+#   ansible-playbook export.yml                  # everything
+#   ansible-playbook export.yml --tags macos     # files/macos-settings.json
+#   ansible-playbook export.yml --tags obsidian  # files/obsidian/
+# init.yml applies both on other machines.
+
+- name: Export settings
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - vars/macos_settings.yml
+    - vars/obsidian.yml
+
+  tasks:
+    - name: Export macOS settings
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - "{{ playbook_dir }}/scripts/macos_settings.py"
+          - export
+          - --keys-json
+          - "{{ macos_settings_keys | to_json }}"
+          - --out
+          - "{{ macos_settings_file }}"
+      register: _export_macos
+      changed_when: true
+      check_mode: false
+      tags: [macos]
+
+    - name: Export Obsidian settings (no note content)
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - "{{ playbook_dir }}/scripts/obsidian_config.py"
+          - export
+          - --vault
+          - "{{ obsidian_source_vault | expanduser }}"   # empty = the open vault
+          - --out
+          - "{{ obsidian_config_dir }}"
+          - --rules-json
+          - "{{ obsidian_export_rules | to_json }}"
+      register: _export_obsidian
+      changed_when: true
+      check_mode: false
+      tags: [obsidian]
+
+    - name: Show the result
+      ansible.builtin.debug:
+        msg: >-
+          {{ (_export_macos.stdout_lines | default([])) + (_export_macos.stderr_lines | default([]))
+             + (_export_obsidian.stdout_lines | default([])) }}
+      tags: [always]

@@ -1,0 +1,13 @@
+{
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "root",
+  "pdfExportSettings": {
+    "downscalePercent": 100,
+    "landscape": false,
+    "margin": "0",
+    "pageSize": "Letter"
+  },
+  "showLineNumber": false,
+  "spellcheck": true,
+  "tabSize": 2
+}

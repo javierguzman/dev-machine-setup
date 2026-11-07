@@ -1,20 +1,39 @@
-# Cross-platform (nvm works on both macOS and Linux)
-- name: Install nvm
-  become: false
-  ansible.builtin.shell: >
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-  args:
-    executable: /bin/bash
-    chdir: "$HOME"
-    creates: "$HOME/.nvm/nvm.sh"
+# Node.js via nvm (minimal)
 
-- name: Install node
-  become: false
-  shell: >
-    . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ item }}
+# PROFILE=/dev/null stops the nvm installer from editing ~/.zshrc.
+# The dotfiles .zshrc already loads nvm, and an extra ~/.zshrc file blocks stow.
+- name: Install nvm
+  ansible.builtin.shell: >
+    set -o pipefail &&
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh
+    | PROFILE=/dev/null bash
   args:
     executable: /bin/bash
-    chdir: "{{ ansible_env.HOME }}"
-    creates: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ item }}"
-  loop:
-    - 18
+    creates: "{{ ansible_facts['user_dir'] }}/.nvm/nvm.sh"
+
+- name: Install Node.js versions
+  ansible.builtin.shell: |
+    . "$HOME/.nvm/nvm.sh"
+    nvm install '{{ item }}' 2>&1
+  args:
+    executable: /bin/bash
+  loop: "{{ node_versions }}"
+  register: _nvm_install
+  changed_when: "'is already installed' not in _nvm_install.stdout"
+  ignore_errors: true
+
+# Set the default only on a new machine. An existing default stays, because
+# global npm packages belong to one Node.js version.
+- name: Set the default Node.js version (only when none is set)
+  ansible.builtin.shell: |
+    . "$HOME/.nvm/nvm.sh"
+    if [ -s "$NVM_DIR/alias/default" ]; then
+      echo "DEFAULT_EXISTS"
+    else
+      nvm alias default '{{ node_versions[0] }}'
+    fi
+  args:
+    executable: /bin/bash
+  register: _nvm_default
+  changed_when: "'DEFAULT_EXISTS' not in _nvm_default.stdout"
+  ignore_errors: true
