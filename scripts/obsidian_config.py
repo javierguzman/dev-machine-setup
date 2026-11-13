@@ -8,12 +8,16 @@ export: copy selected settings from a vault to an output folder.
         - Plugin data (data.json) is copied only for plugins that are not in
           plugin_data_exclude (plugins with secrets or personal structure).
         - Keys in strip_keys and hotkeys that match drop_hotkeys are removed.
+        - Template notes in "templates" are copied from the vault's templates
+          folder (Templater or core Templates setting) to templates/.
         - A final scan fails the export when an output file contains a secret-like
           key with a value, the home folder path, or a top-level folder name of
           the vault. The output can go into a public repository.
 
 apply:  create <vault>/.obsidian from the output folder and download the plugins
         and themes. A vault that already has a .obsidian folder stays untouched.
+        Templates go to <vault>/Templates (existing files stay untouched), and
+        Templater and core Templates use that folder.
 
 Usage:
   obsidian_config.py export [--vault VAULT] --out DIR --rules-json JSON
@@ -29,6 +33,7 @@ import sys
 import urllib.request
 
 HOME = os.path.expanduser("~")
+TEMPLATES_DIR = "Templates"   # templates folder in the vault, on apply
 SECRET_KEY = re.compile(r"(api[_-]?key|token|secret|passw|passphrase|private[_-]?key|cert|credential|couchdb)", re.I)
 PLUGIN_LIST = "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json"
 THEME_LIST = "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-css-themes.json"
@@ -137,6 +142,8 @@ def export(vault, out, rules):
             themes[load(manifest).get("name", theme)] = load(manifest).get("version", "")
     dump(os.path.join(out, "themes.json"), themes)
 
+    templates = export_templates(src, out, rules.get("templates", []))
+
     problems = scan(out, os.path.expanduser(vault))
     if problems:
         shutil.rmtree(out)
@@ -146,7 +153,36 @@ def export(vault, out, rules):
         print("Add the plugin to plugin_data_exclude, or the key to strip_keys.")
         sys.exit(1)
     count = sum(len(f) for _, _, f in os.walk(out))
-    print(f"EXPORTED {count} files, {len(plugins)} plugins, {len(themes)} themes to {out}")
+    print(f"EXPORTED {count} files, {len(plugins)} plugins, {len(themes)} themes, "
+          f"{templates} templates to {out}")
+
+
+def templates_folder(src):
+    """Return the vault's templates folder: Templater setting first, then core Templates."""
+    for path, key in ((os.path.join(src, "plugins", "templater-obsidian", "data.json"), "templates_folder"),
+                      (os.path.join(src, "templates.json"), "folder")):
+        if os.path.exists(path):
+            folder = load(path).get(key, "").strip("/")
+            if folder:
+                return folder
+    return ""
+
+
+def export_templates(src, out, names):
+    """Copy the template notes in names to <out>/templates. Return the count."""
+    if not names:
+        return 0
+    folder = templates_folder(src)
+    if not folder:
+        sys.exit("ERROR templates are set, but the vault has no templates folder setting")
+    vault = os.path.dirname(src)
+    for name in names:
+        path = os.path.join(vault, folder, name)
+        if not os.path.exists(path):
+            sys.exit(f"ERROR template not found in the templates folder: {name}")
+        os.makedirs(os.path.join(out, "templates"), exist_ok=True)
+        shutil.copy2(path, os.path.join(out, "templates", name))
+    return len(names)
 
 
 def scan(out, vault):
@@ -158,6 +194,12 @@ def scan(out, vault):
         for name in files:
             path = os.path.join(root, name)
             rel = os.path.relpath(path, out)
+            if not name.endswith(".json"):
+                with open(path) as fh:
+                    text = fh.read()
+                if HOME in text or any(f in text for f in folders):
+                    problems.append(f"{rel}: has a vault folder name or home path")
+                continue
             for p, key, value in walk(load(path)):
                 if key is not None:
                     if any(f in key for f in folders) or HOME in key:
@@ -180,6 +222,28 @@ def fetch(url):
         return resp.read()
 
 
+def apply_templates(src, vault, target):
+    """Copy the templates to <vault>/Templates and point Templater and core Templates there."""
+    tsrc = os.path.join(src, "templates")
+    if not os.path.isdir(tsrc):
+        return
+    tdir = os.path.join(vault, TEMPLATES_DIR)
+    os.makedirs(tdir, exist_ok=True)
+    for name in sorted(os.listdir(tsrc)):
+        dest = os.path.join(tdir, name)
+        if os.path.exists(dest):
+            print(f"SKIP template {name}: already exists")
+            continue
+        shutil.copy2(os.path.join(tsrc, name), dest)
+        print(f"TEMPLATE {name}")
+    dump(os.path.join(target, "templates.json"), {"folder": TEMPLATES_DIR})
+    plugins = load(os.path.join(src, "plugins.json"))
+    tp_data = os.path.join(target, "plugins", "templater-obsidian", "data.json")
+    if "templater-obsidian" in plugins and not os.path.exists(tp_data):
+        # Templater fills the other settings with its defaults.
+        dump(tp_data, {"templates_folder": TEMPLATES_DIR})
+
+
 def apply(src, vault, check, extra_repos):
     vault = os.path.expanduser(vault)
     target = os.path.join(vault, ".obsidian")
@@ -193,10 +257,12 @@ def apply(src, vault, check, extra_repos):
     for root, _, files in os.walk(src):
         for name in files:
             rel = os.path.relpath(os.path.join(root, name), src)
-            if rel in ("plugins.json", "themes.json"):
+            if rel in ("plugins.json", "themes.json") or rel.startswith("templates" + os.sep):
                 continue
             os.makedirs(os.path.dirname(os.path.join(target, rel)), exist_ok=True)
             shutil.copy2(os.path.join(src, rel), os.path.join(target, rel))
+
+    apply_templates(src, vault, target)
 
     failed = 0
     plugins = load(os.path.join(src, "plugins.json"))

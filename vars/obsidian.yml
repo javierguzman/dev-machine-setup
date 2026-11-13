@@ -51,5 +51,14 @@ obsidian_export_rules:
     - languagetool                # uses the home LanguageTool server
     - obsidian-vault-changelog    # optional: list of recently changed files
     - settings-search             # built into Obsidian since 1.13; plugin deprecated
+    - note-refactor-obsidian      # old; the core plugin Note composer does the same
+    - obsidian-plugin-toc         # old; the Table of Content template does the same
+  # Template notes to export (Templater syntax). The export reads the templates
+  # folder from the Templater or core Templates settings. Apply copies the
+  # templates to <vault>/Templates and points Templater to that folder.
+  # Add only templates without secrets, names, or personal folder paths.
+  templates:
+    - New Note.md
+    - Table of Content.md
   # Property types of excluded plugins (types.json)
   drop_type_prefixes: ["lt-"]     # LanguageTool

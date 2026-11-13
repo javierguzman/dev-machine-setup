@@ -10,7 +10,7 @@
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Z` | Open project picker |
+| `Ctrl+Z` / `Prefix + f` | Open project picker |
 | `Prefix + \|` | Split pane vertically |
 | `Prefix + -` | Split pane horizontally |
 | `Ctrl+h/j/k/l` | Move between panes |
@@ -78,7 +78,7 @@
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Z` (shell) / `Space+F` (nvim) | Open project picker — fuzzy-find and switch projects |
+| `Ctrl+Z` (shell) / `Space+F` (nvim) / `Prefix + f` (popup, anywhere) | Open project picker — jump to the project session, or create it with an `editor` and a `terminal` window |
 | `Prefix + c` | New window |
 | `Prefix + ,` | Rename current window |
 | `Prefix + [1-9]` | Jump to window by number |

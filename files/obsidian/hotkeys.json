@@ -235,16 +235,7 @@
     }
   ],
   "markdown:add-metadata-property": [],
-  "note-refactor-obsidian:app:extract-selection-first-line": [],
   "obsidian-advanced-slides:open-advanced-slides-preview": [],
-  "obsidian-plugin-toc:create-toc": [
-    {
-      "key": "T",
-      "modifiers": [
-        "Ctrl"
-      ]
-    }
-  ],
   "switcher:open": [
     {
       "key": "P",
