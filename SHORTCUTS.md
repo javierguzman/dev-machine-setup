@@ -78,7 +78,7 @@
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Z` (shell) / `Space+F` (nvim) / `Prefix + f` (popup, anywhere) | Open project picker — jump to the project session, or create it with an `editor` and a `terminal` window |
+| `Ctrl+Z` (shell) / `Space+F` (nvim) / `Prefix + f` (popup, anywhere) | Open project picker — jump to the project session, or create it with `editor`, `ai`, and `terminal` windows |
 | `Prefix + c` | New window |
 | `Prefix + ,` | Rename current window |
 | `Prefix + [1-9]` | Jump to window by number |
