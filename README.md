@@ -18,7 +18,7 @@ The names in `code` are the names for `extra_apps` and `skip_apps` (see below).
 |----------------|-----------|-------------|-----------------|
 | `core` | `ripgrep`, `fzf`, `stow`, `tlrc` (tldr), `jq`, `mas` (App Store CLI) | | |
 | `zsh` | zsh, Oh-My-Zsh, Powerlevel10k, zsh-autosuggestions | | |
-| `terminal` | `neovim`, `tmux`, `lazygit`, `ghostty` (macOS and Linux), `iterm2` (macOS), `font-fira-code-nerd-font` | | |
+| `terminal` | `neovim`, `tree-sitter-cli` (macOS), `tmux`, `lazygit`, `ghostty` (macOS and Linux), `iterm2` (macOS), `font-fira-code-nerd-font` | | |
 | `window-manager` | `yabai`, `skhd` (macOS), `hyprland` (Linux, Ubuntu 26.04+) | | |
 | `node`, `python` | Node.js LTS (nvm), Python 3.14 (`pyenv`) | | |
 | `dev-tools` | `visual-studio-code`, `jetbrains-toolbox`, `yaak`, `beyond-compare`, `pgadmin4`, container runtime, `kubectl`, `helm`, Claude Code | `lm-studio` | `android-studio` |
@@ -107,7 +107,7 @@ For a work laptop, set `git_user_email` (and maybe `git_gpg_sign: false`) in `lo
 
 ### Terminal look
 
-Ghostty is the terminal on macOS and Linux (snap on Linux). Ghostty and iTerm2 get the same look as the Alacritty config: FiraCode Nerd Font at 14 pt without ligatures, Tokyo Night Dark, 8 px padding, 95 % opacity, no title bar, a blinking block cursor, and left Option as Alt (with the same word-jump keys).
+Ghostty is the terminal on macOS and Linux (snap on Linux). Ghostty and iTerm2 get the same look as the Alacritty config: FiraCode Nerd Font at 14 pt with ligatures, Tokyo Night Dark, 8 px padding, 95 % opacity, no title bar, a blinking block cursor, and left Option as Alt (with the same word-jump keys).
 
 - The values are in `vars/terminal.yml`. Templates in `templates/ghostty/` and `templates/iterm2/` use them.
 - Ghostty (both systems): `~/.config/ghostty/config.ghostty` and `~/.config/ghostty/themes/`. The macOS-only settings (no title bar, left Option as Alt) apply only on macOS. Put your own changes in `~/.config/ghostty/config.local`. The playbook does not touch that file.

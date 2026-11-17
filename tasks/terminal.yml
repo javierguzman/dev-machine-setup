@@ -5,6 +5,9 @@
   vars:
     packages:
       - { profile: minimal, brew: neovim, apt: neovim }
+      # nvim-treesitter (main branch) compiles parsers with tree-sitter-cli 0.26.1+.
+      # Linux: the apt package is too old; install it from the GitHub release.
+      - { profile: minimal, brew: tree-sitter-cli }
       - { profile: minimal, brew: tmux, apt: tmux }
       - { profile: minimal, brew: lazygit }            # Linux: GitHub release below
       - { profile: minimal, cask: iterm2 }

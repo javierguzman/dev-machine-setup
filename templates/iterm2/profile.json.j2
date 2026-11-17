@@ -36,6 +36,8 @@
       "Window Type": 12,
       "Transparency": {{ '%.2f' | format(1 - terminal_opacity) }},
       "Blur": false,
+      "Side Margins": {{ terminal_padding }},
+      "Top/Bottom Margins": {{ terminal_padding }},
       "Cursor Type": 2,
       "Blinking Cursor": {{ terminal_cursor_blink | lower }},
       "Option Key Sends": 2,
@@ -54,6 +56,8 @@
       "Keyboard Map": {
         "0xf702-0x280000": {"Action": 10, "Text": "b"},
         "0xf703-0x280000": {"Action": 10, "Text": "f"},
+        "0x2e-0x80000": {"Action": 10, "Text": "."},
+        "0x2c-0x80000": {"Action": 10, "Text": ","},
         "0x9-0x80000": {"Action": 11, "Text": "0x1b 0x09"}
       }
     }

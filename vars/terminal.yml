@@ -17,8 +17,8 @@ terminal_font:
     bold: Bold
     italic: Light
     bold_italic: SemiBold
-  # Alacritty does not draw ligatures. Keep false to look the same.
-  ligatures: false
+  # Alacritty does not draw ligatures. Ghostty and iTerm2 draw them.
+  ligatures: true
 
 terminal_padding: 8          # pixels, both directions
 terminal_opacity: 0.95
